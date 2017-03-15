@@ -17,9 +17,98 @@
 global flags
 """
 
-import gflags
+from ryu import cfg
 
-FLAGS = gflags.FLAGS
+CONF = cfg.CONF
 
-# GLOBAL flags
-gflags.DEFINE_boolean('monkey_patch', False, 'do monkey patch')
+CONF.register_cli_opts([
+    # tests/switch/tester
+    cfg.StrOpt('target', default='0000000000000001', help='target sw dp-id'),
+    cfg.StrOpt('tester', default='0000000000000002', help='tester sw dp-id'),
+    cfg.IntOpt('target_recv_port', default=1,
+               help='target sw receiving port '
+               '(default: 1)'),
+    cfg.IntOpt('target_send_port_1', default=2,
+               help='target sw sending port 1 '
+               '(default: 2)'),
+    cfg.IntOpt('target_send_port_2', default=3,
+               help='target sw sending port 2  '
+               '(default: 3)'),
+    cfg.IntOpt('tester_send_port', default=1,
+               help='tester sw sending port '
+               '(default: 1)'),
+    cfg.IntOpt('tester_recv_port_1', default=2,
+               help='tester sw receiving port 1 '
+               '(default: 2)'),
+    cfg.IntOpt('tester_recv_port_2', default=3,
+               help='tester sw receiving port 2 '
+               '(default: 3)'),
+    cfg.StrOpt('dir', default='ryu/tests/switch/of13',
+               help='test files directory'),
+    cfg.StrOpt('target-version', default='openflow13',
+               help='target sw OFP version '
+               '[openflow10|openflow13|openflow14] '
+               '(default: openflow13)'),
+    cfg.StrOpt('tester-version', default='openflow13',
+               help='tester sw OFP version '
+               '[openflow10|openflow13|openflow14] '
+               '(default: openflow13)'),
+    cfg.IntOpt('interval', default=0,
+               help='interval time in seconds of each test '
+               '(default: 0)'),
+], group='test-switch')
+
+
+DEFAULT_RPC_PORT = 50002
+DEFAULT_RPC_HOST = '0.0.0.0'
+
+CONF.register_cli_opts([
+    cfg.IntOpt('rpc-port', default=DEFAULT_RPC_PORT,
+               help='Port for RPC server (default: %s)' % DEFAULT_RPC_PORT),
+    cfg.StrOpt('rpc-host', default=DEFAULT_RPC_HOST,
+               help='IP for RPC server (default: %s)' % DEFAULT_RPC_HOST),
+    cfg.StrOpt('config-file', default=None,
+               help='The config file formatted in Python source file. '
+                    'Please refer to "bgp_sample_conf.py" for details.')
+], group='bgp-app')
+
+
+DEFAULT_ZSERV_HOST = '/var/run/quagga/zserv.api'
+DEFAULT_ZSERV_PORT = 2600
+DEFAULT_ZSERV_VERSION = 2  # Version of Ubuntu 16.04 LTS packaged Quagga
+DEFAULT_ZSERV_CLIENT_ROUTE_TYPE = 'BGP'
+DEFAULT_ZSERV_INTERVAL = 10
+DEFAULT_ZSERV_DATABASE = 'sqlite:///zebra.db'
+DEFAULT_ZSERV_ROUTER_ID = '1.1.1.1'
+
+CONF.register_cli_opts([
+    cfg.StrOpt(
+        'server-host', default=DEFAULT_ZSERV_HOST,
+        help='Path to Unix Socket or IP address of Zebra server '
+             '(default: %s)' % DEFAULT_ZSERV_HOST),
+    cfg.IntOpt(
+        'server-port', default=DEFAULT_ZSERV_PORT,
+        help='Port number of Zebra server '
+             '(default: %s)'
+        % DEFAULT_ZSERV_PORT),
+    cfg.IntOpt(
+        'server-version', default=DEFAULT_ZSERV_VERSION,
+        help='Zebra protocol version of Zebra server '
+             '(default: %s)' % DEFAULT_ZSERV_VERSION),
+    cfg.StrOpt(
+        'client-route-type', default=DEFAULT_ZSERV_CLIENT_ROUTE_TYPE,
+        help='Zebra route type advertised by Zebra client service. '
+             '(default: %s)' % DEFAULT_ZSERV_CLIENT_ROUTE_TYPE),
+    cfg.IntOpt(
+        'retry-interval', default=DEFAULT_ZSERV_INTERVAL,
+        help='Retry interval connecting to Zebra server '
+             '(default: %s)' % DEFAULT_ZSERV_INTERVAL),
+    cfg.StrOpt(
+        'db-url', default=DEFAULT_ZSERV_DATABASE,
+        help='URL to database used by Zebra protocol service '
+             '(default: %s)' % DEFAULT_ZSERV_DATABASE),
+    cfg.StrOpt(
+        'router-id', default=DEFAULT_ZSERV_ROUTER_ID,
+        help='Initial Router ID used by Zebra protocol service '
+             '(default: %s)' % DEFAULT_ZSERV_ROUTER_ID),
+], group='zapi')

@@ -14,43 +14,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import sys
+# a bug workaround.  http://bugs.python.org/issue15881
+try:
+    import multiprocessing
+except ImportError:
+    pass
 
-from setuptools import find_packages
-from setuptools import setup
+import setuptools
+import ryu.hooks
 
-from ryu import version
 
-doing_bdist = any(arg.startswith('bdist') for arg in sys.argv[1:])
-
-long_description = open('README.rst').read() + '\n\n'
-
-if doing_bdist:
-    start = long_description.find('=\n') + 2
-    long_description = long_description[
-        start:long_description.find('\n\n\n', start)]
-
-classifiers = [
-    'License :: OSI Approved :: Apache Software License',
-    'Topic :: System :: Networking',
-    'Natural Language :: English',
-    'Programming Language :: Python',
-    'Operating System :: Unix',
-]
-
-setup(name='ryu',
-      version=version,
-      description=("Ryu Network Operating System"),
-      long_description=long_description,
-      classifiers=classifiers,
-      keywords='openflow openvswitch openstack',
-      url='http://osrg.github.com/ryu/',
-      author='Ryu project team',
-      author_email='ryu-devel@lists.sourceforge.net',
-      license='Apache License 2.0',
-      packages=find_packages(),
-      scripts=['bin/ryu-manager',
-               'bin/ryu-client'],
-      data_files=[('etc/ryu', ['etc/ryu/ryu.conf'])],
-      )
+ryu.hooks.save_orig()
+setuptools.setup(name='ryu',
+                 setup_requires=['pbr'],
+                 pbr=True)

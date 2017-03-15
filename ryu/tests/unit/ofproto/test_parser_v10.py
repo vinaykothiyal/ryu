@@ -17,33 +17,36 @@
 
 import unittest
 import logging
+import six
 from nose.tools import *
 from ryu.ofproto.ofproto_v1_0_parser import *
+from ryu.ofproto.nx_actions import *
 from ryu.ofproto import ofproto_v1_0_parser
+from ryu.lib import addrconv
 
 
 LOG = logging.getLogger('test_ofproto_v10')
 
 
 class TestOFPPhyPort(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPhyPort
+    """ Test case for ofproto_v1_0_parser.OFPPhyPort
     """
 
     # OFP_PHY_PORT_PACK_STR
     # '!H6s16sIIIIII'... port_no, hw_addr, name, config, state
     #                    curr, advertised, supported, peer
-    port_no = {'buf': '\xe7\x6b', 'val': 59243}
-    hw_addr = '\x52\x54\x54\x10\x20\x99'
-    name = 'name'.ljust(16)
-    config = {'buf': '\x84\xb6\x8c\x53', 'val': 2226555987}
-    state = {'buf': '\x64\x07\xfb\xc9', 'val': 1678244809}
-    curr = {'buf': '\xa9\xe8\x0a\x2b', 'val': 2850556459}
-    advertised = {'buf': '\x78\xb9\x7b\x72', 'val': 2025421682}
-    supported = {'buf': '\x7e\x65\x68\xad', 'val': 2120575149}
-    peer = {'buf': '\xa4\x5b\x8b\xed', 'val': 2757463021}
+    port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+    hw_addr = '52:54:54:10:20:99'
+    name = b'name'.ljust(16)
+    config = {'buf': b'\x84\xb6\x8c\x53', 'val': 2226555987}
+    state = {'buf': b'\x64\x07\xfb\xc9', 'val': 1678244809}
+    curr = {'buf': b'\xa9\xe8\x0a\x2b', 'val': 2850556459}
+    advertised = {'buf': b'\x78\xb9\x7b\x72', 'val': 2025421682}
+    supported = {'buf': b'\x7e\x65\x68\xad', 'val': 2120575149}
+    peer = {'buf': b'\xa4\x5b\x8b\xed', 'val': 2757463021}
 
     buf = port_no['buf'] \
-        + hw_addr \
+        + addrconv.mac.text_to_bin(hw_addr) \
         + name \
         + config['buf'] \
         + state['buf'] \
@@ -94,33 +97,37 @@ class TestOFPPhyPort(unittest.TestCase):
 
 
 class TestOFPMatch(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPMatch
+    """ Test case for ofproto_v1_0_parser.OFPMatch
     """
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-    in_port = {'buf': '\x37\x8b', 'val': 14219}
-    dl_src = '\x52\x54\x54\x10\x20\x99'
-    dl_dst = '\x61\x31\x50\x6d\xc9\xe5'
-    dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-    dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-    nw_tos = {'buf': '\xde', 'val': 222}
-    nw_proto = {'buf': '\xe5', 'val': 229}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-    nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-    tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-    tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+    wildcards = {'buf': b'\x00\x02\x10\x00', 'val': 135168}
+    in_port = {'buf': b'\x37\x8b', 'val': 14219}
+    dl_src = {'buf': b'\x52\x54\x54\x10\x20\x99',
+              'human': '52:54:54:10:20:99'}
+    dl_dst = {'buf': b'\x61\x31\x50\x6d\xc9\xe5',
+              'human': '61:31:50:6d:c9:e5'}
+    dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+    dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+    nw_tos = {'buf': b'\xde', 'val': 222}
+    nw_proto = {'buf': b'\xe5', 'val': 229}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427,
+              'human': '27.109.141.75'}
+    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400,
+              'human': '171.37.225.32'}
+    tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+    tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
     buf = wildcards['buf'] \
         + in_port['buf'] \
-        + dl_src \
-        + dl_dst \
+        + dl_src['buf'] \
+        + dl_dst['buf'] \
         + dl_vlan['buf'] \
         + dl_vlan_pcp['buf'] \
         + zfill0 \
@@ -156,12 +163,12 @@ class TestOFPMatch(unittest.TestCase):
         pass
 
     def test_init(self):
-        c = self._get_obj(self.dl_src, self.dl_dst)
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
 
         eq_(self.wildcards['val'], c.wildcards)
         eq_(self.in_port['val'], c.in_port)
-        eq_(self.dl_src, c.dl_src)
-        eq_(self.dl_dst, c.dl_dst)
+        eq_(self.dl_src['buf'], c.dl_src)
+        eq_(self.dl_dst['buf'], c.dl_dst)
         eq_(self.dl_vlan['val'], c.dl_vlan)
         eq_(self.dl_vlan_pcp['val'], c.dl_vlan_pcp)
         eq_(self.dl_type['val'], c.dl_type)
@@ -178,13 +185,13 @@ class TestOFPMatch(unittest.TestCase):
         eq_(mac.DONTCARE, c.dl_dst)
 
     def test_parse(self):
-        c = self._get_obj(self.dl_src, self.dl_dst)
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
         res = c.parse(self.buf, 0)
 
         eq_(self.wildcards['val'], res.wildcards)
         eq_(self.in_port['val'], res.in_port)
-        eq_(self.dl_src, res.dl_src)
-        eq_(self.dl_dst, res.dl_dst)
+        eq_(self.dl_src['buf'], res.dl_src)
+        eq_(self.dl_dst['buf'], res.dl_dst)
         eq_(self.dl_vlan['val'], res.dl_vlan)
         eq_(self.dl_vlan_pcp['val'], res.dl_vlan_pcp)
         eq_(self.dl_type['val'], res.dl_type)
@@ -197,17 +204,17 @@ class TestOFPMatch(unittest.TestCase):
 
     def test_serialize(self):
         buf = bytearray()
-        c = self._get_obj(self.dl_src, self.dl_dst)
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
 
         c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_MATCH_PACK_STR
-        res = struct.unpack_from(fmt, buffer(buf))
+        fmt = ofproto.OFP_MATCH_PACK_STR
+        res = struct.unpack_from(fmt, six.binary_type(buf))
 
         eq_(self.wildcards['val'], res[0])
         eq_(self.in_port['val'], res[1])
-        eq_(self.dl_src, res[2])
-        eq_(self.dl_dst, res[3])
+        eq_(self.dl_src['buf'], res[2])
+        eq_(self.dl_dst['buf'], res[3])
         eq_(self.dl_vlan['val'], res[4])
         eq_(self.dl_vlan_pcp['val'], res[5])
         eq_(self.dl_type['val'], res[6])
@@ -218,16 +225,33 @@ class TestOFPMatch(unittest.TestCase):
         eq_(self.tp_src['val'], res[11])
         eq_(self.tp_dst['val'], res[12])
 
+    def test_getitem(self):
+        c = self._get_obj(self.dl_src['buf'], self.dl_dst['buf'])
+
+        eq_(self.wildcards['val'], c["wildcards"])
+        eq_(self.in_port['val'], c["in_port"])
+        eq_(self.dl_src['human'], c["dl_src"])
+        eq_(self.dl_dst['human'], c["dl_dst"])
+        eq_(self.dl_vlan['val'], c["dl_vlan"])
+        eq_(self.dl_vlan_pcp['val'], c["dl_vlan_pcp"])
+        eq_(self.dl_type['val'], c["dl_type"])
+        eq_(self.nw_tos['val'], c["nw_tos"])
+        eq_(self.nw_proto['val'], c["nw_proto"])
+        eq_(self.nw_src['human'], c["nw_src"])
+        eq_(self.nw_dst['human'], c["nw_dst"])
+        eq_(self.tp_src['val'], c["tp_src"])
+        eq_(self.tp_dst['val'], c["tp_dst"])
+
 
 class TestOFPActionHeader(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionHeader
+    """ Test case for ofproto_v1_0_parser.OFPActionHeader
     """
 
     # OFP_ACTION_HEADER_PACK_STR
     # '!HH4x'...type, len, zfill
-    type = {'buf': '\x00\x02', 'val': ofproto_v1_0.OFPAT_SET_VLAN_PCP}
-    len = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_HEADER_SIZE}
-    zfill = '\x00' * 4
+    type = {'buf': b'\x00\x02', 'val': ofproto.OFPAT_SET_VLAN_PCP}
+    len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_HEADER_SIZE}
+    zfill = b'\x00' * 4
 
     buf = type['buf'] \
         + len['buf'] \
@@ -249,23 +273,23 @@ class TestOFPActionHeader(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_HEADER_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_HEADER_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type['val'], res[0])
         eq_(self.len['val'], res[1])
 
 
 class TestOFPActionOutput(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionOutput
+    """ Test case for ofproto_v1_0_parser.OFPActionOutput
     """
 
     # OFP_ACTION_OUTPUT_PACK_STR
     # '!HHHH'...type, len, port, max_len
-    type_ = {'buf': '\x00\x00', 'val': ofproto_v1_0.OFPAT_OUTPUT}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE}
-    port = {'buf': '\x19\xce', 'val': 6606}
-    max_len = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE}
+    type_ = {'buf': b'\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    port = {'buf': b'\x19\xce', 'val': 6606}
+    max_len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -292,7 +316,7 @@ class TestOFPActionOutput(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x01', 'val': 1}
+        type_ = {'buf': b'\x00\x01', 'val': 1}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -303,7 +327,7 @@ class TestOFPActionOutput(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -316,8 +340,8 @@ class TestOFPActionOutput(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_OUTPUT_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -326,15 +350,15 @@ class TestOFPActionOutput(unittest.TestCase):
 
 
 class TestOFPActionVlanVid(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionVlanVid
+    """ Test case for ofproto_v1_0_parser.OFPActionVlanVid
     """
 
     # OFP_ACTION_VLAN_VID_PACK_STR
     # '!HHH2x'...type, len, vlan_vid, zfill
-    type_ = {'buf': '\x00\x01', 'val': ofproto_v1_0.OFPAT_SET_VLAN_VID}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_VLAN_VID_SIZE}
-    vlan_vid = {'buf': '\x3c\x0e', 'val': 15374}
-    zfill = '\x00' * 2
+    type_ = {'buf': b'\x00\x01', 'val': ofproto.OFPAT_SET_VLAN_VID}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_VLAN_VID_SIZE}
+    vlan_vid = {'buf': b'\x3c\x0e', 'val': 15374}
+    zfill = b'\x00' * 2
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -359,7 +383,7 @@ class TestOFPActionVlanVid(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x02', 'val': 2}
+        type_ = {'buf': b'\x00\x02', 'val': 2}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -370,7 +394,7 @@ class TestOFPActionVlanVid(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -383,8 +407,8 @@ class TestOFPActionVlanVid(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_VLAN_VID_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_VLAN_VID_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -392,15 +416,15 @@ class TestOFPActionVlanVid(unittest.TestCase):
 
 
 class TestOFPActionVlanPcp(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionVlanPcp
+    """ Test case for ofproto_v1_0_parser.OFPActionVlanPcp
     """
 
     # OFP_ACTION_VLAN_PCP_PACK_STR
     # '!HHB3x'...type, len, vlan_pcp, zfill
-    type_ = {'buf': '\x00\x02', 'val': ofproto_v1_0.OFPAT_SET_VLAN_PCP}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_VLAN_PCP_SIZE}
-    vlan_pcp = {'buf': '\x1c', 'val': 28}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\x00\x02', 'val': ofproto.OFPAT_SET_VLAN_PCP}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_VLAN_PCP_SIZE}
+    vlan_pcp = {'buf': b'\x1c', 'val': 28}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -424,7 +448,7 @@ class TestOFPActionVlanPcp(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x01', 'val': 1}
+        type_ = {'buf': b'\x00\x01', 'val': 1}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -435,7 +459,7 @@ class TestOFPActionVlanPcp(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -448,8 +472,8 @@ class TestOFPActionVlanPcp(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_VLAN_PCP_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_VLAN_PCP_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -457,14 +481,14 @@ class TestOFPActionVlanPcp(unittest.TestCase):
 
 
 class TestOFPActionStripVlan(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionStripVlan
+    """ Test case for ofproto_v1_0_parser.OFPActionStripVlan
     """
 
     # OFP_ACTION_HEADER_PACK_STR
     # '!HH4x'...type, len, zfill
-    type_ = {'buf': '\x00\x03', 'val': ofproto_v1_0.OFPAT_STRIP_VLAN}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_HEADER_SIZE}
-    zfill = '\x00' * 4
+    type_ = {'buf': b'\x00\x03', 'val': ofproto.OFPAT_STRIP_VLAN}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_HEADER_SIZE}
+    zfill = b'\x00' * 4
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -486,7 +510,7 @@ class TestOFPActionStripVlan(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x01', 'val': 1}
+        type_ = {'buf': b'\x00\x01', 'val': 1}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -496,7 +520,7 @@ class TestOFPActionStripVlan(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -506,15 +530,15 @@ class TestOFPActionStripVlan(unittest.TestCase):
 
 
 class TestOFPActionSetDlSrc(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetDlSrc
+    """ Test case for ofproto_v1_0_parser.OFPActionSetDlSrc
     """
 
     # OFP_ACTION_DL_ADDR_PACK_STR
     # '!HH6s6x'...type, len, dl_addr, zfill
-    type_ = {'buf': '\x00\x04', 'val': ofproto_v1_0.OFPAT_SET_DL_SRC}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.OFP_ACTION_DL_ADDR_SIZE}
-    dl_addr = '\x0e\xde\x27\xce\xc6\xcf'
-    zfill = '\x00' * 6
+    type_ = {'buf': b'\x00\x04', 'val': ofproto.OFPAT_SET_DL_SRC}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.OFP_ACTION_DL_ADDR_SIZE}
+    dl_addr = b'\x0e\xde\x27\xce\xc6\xcf'
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -537,7 +561,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
         eq_(self.dl_addr, res.dl_addr)
 
     def test_parser_type_dst(self):
-        type_ = {'buf': '\x00\x05', 'val': ofproto_v1_0.OFPAT_SET_DL_DST}
+        type_ = {'buf': b'\x00\x05', 'val': ofproto.OFPAT_SET_DL_DST}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -549,7 +573,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x06', 'val': 6}
+        type_ = {'buf': b'\x00\x06', 'val': 6}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -559,7 +583,7 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
         buf = self.type_['buf'] \
             + len_['buf'] \
             + self.dl_addr \
@@ -571,8 +595,8 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_DL_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_DL_ADDR_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -580,15 +604,15 @@ class TestOFPActionSetDlSrc(unittest.TestCase):
 
 
 class TestOFPActionSetDlDst(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetDlDst
+    """ Test case for ofproto_v1_0_parser.OFPActionSetDlDst
     """
 
     # OFP_ACTION_DL_ADDR_PACK_STR
     # '!HH6s6x'...type, len, dl_addr, zfill
-    type_ = {'buf': '\x00\x05', 'val': ofproto_v1_0.OFPAT_SET_DL_DST}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.OFP_ACTION_DL_ADDR_SIZE}
-    dl_addr = '\x37\x48\x38\x9a\xf4\x28'
-    zfill = '\x00' * 6
+    type_ = {'buf': b'\x00\x05', 'val': ofproto.OFPAT_SET_DL_DST}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.OFP_ACTION_DL_ADDR_SIZE}
+    dl_addr = b'\x37\x48\x38\x9a\xf4\x28'
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -611,7 +635,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
         eq_(self.dl_addr, res.dl_addr)
 
     def test_parser_type_src(self):
-        type_ = {'buf': '\x00\x04', 'val': ofproto_v1_0.OFPAT_SET_DL_SRC}
+        type_ = {'buf': b'\x00\x04', 'val': ofproto.OFPAT_SET_DL_SRC}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -623,7 +647,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x06', 'val': 6}
+        type_ = {'buf': b'\x00\x06', 'val': 6}
         buf = type_['buf'] \
             + self.len_['buf'] \
             + self.dl_addr \
@@ -633,7 +657,7 @@ class TestOFPActionSetDlDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
         buf = self.type_['buf'] \
             + len_['buf'] \
             + self.dl_addr \
@@ -645,8 +669,8 @@ class TestOFPActionSetDlDst(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_DL_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_DL_ADDR_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -654,14 +678,14 @@ class TestOFPActionSetDlDst(unittest.TestCase):
 
 
 class TestOFPActionSetNwSrc(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetNwSrc
+    """ Test case for ofproto_v1_0_parser.OFPActionSetNwSrc
     """
 
     # OFP_ACTION_NW_ADDR_PACK_STR
     # '!HHI'...type, len, nw_addr
-    type_ = {'buf': '\x00\x06', 'val': ofproto_v1_0.OFPAT_SET_NW_SRC}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_NW_ADDR_SIZE}
-    nw_addr = {'buf': '\xc0\xa8\x7a\x0a', 'val': 3232266762}
+    type_ = {'buf': b'\x00\x06', 'val': ofproto.OFPAT_SET_NW_SRC}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_NW_ADDR_SIZE}
+    nw_addr = {'buf': b'\xc0\xa8\x7a\x0a', 'val': 3232266762}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -683,7 +707,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
         eq_(self.nw_addr['val'], res.nw_addr)
 
     def test_parser_dst(self):
-        type_ = {'buf': '\x00\x07', 'val': ofproto_v1_0.OFPAT_SET_NW_DST}
+        type_ = {'buf': b'\x00\x07', 'val': ofproto.OFPAT_SET_NW_DST}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -694,7 +718,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x05', 'val': 5}
+        type_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -704,7 +728,7 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x10', 'val': 16}
+        len_ = {'buf': b'\x00\x10', 'val': 16}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -716,8 +740,8 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_NW_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_NW_ADDR_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -725,14 +749,14 @@ class TestOFPActionSetNwSrc(unittest.TestCase):
 
 
 class TestOFPActionSetNwDst(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetNwDst
+    """ Test case for ofproto_v1_0_parser.OFPActionSetNwDst
     """
 
     # OFP_ACTION_NW_ADDR_PACK_STR
     # '!HHI'...type, len, nw_addr
-    type_ = {'buf': '\x00\x07', 'val': ofproto_v1_0.OFPAT_SET_NW_DST}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_NW_ADDR_SIZE}
-    nw_addr = {'buf': '\xc0\xa8\x7a\x0a', 'val': 3232266762}
+    type_ = {'buf': b'\x00\x07', 'val': ofproto.OFPAT_SET_NW_DST}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_NW_ADDR_SIZE}
+    nw_addr = {'buf': b'\xc0\xa8\x7a\x0a', 'val': 3232266762}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -754,7 +778,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
         eq_(self.nw_addr['val'], res.nw_addr)
 
     def test_parser_src(self):
-        type_ = {'buf': '\x00\x06', 'val': ofproto_v1_0.OFPAT_SET_NW_SRC}
+        type_ = {'buf': b'\x00\x06', 'val': ofproto.OFPAT_SET_NW_SRC}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -765,7 +789,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x05', 'val': 5}
+        type_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -775,7 +799,7 @@ class TestOFPActionSetNwDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x10', 'val': 16}
+        len_ = {'buf': b'\x00\x10', 'val': 16}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -787,8 +811,8 @@ class TestOFPActionSetNwDst(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_NW_ADDR_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_NW_ADDR_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -796,15 +820,15 @@ class TestOFPActionSetNwDst(unittest.TestCase):
 
 
 class TestOFPActionSetNwTos(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetNwTos
+    """ Test case for ofproto_v1_0_parser.OFPActionSetNwTos
     """
 
     # OFP_ACTION_NW_TOS_PACK_STR
     # '!HHB3x'...type, len, tos, zfill
-    type_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFPAT_SET_NW_TOS}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_NW_TOS_SIZE}
-    tos = {'buf': '\xb6', 'val': 182}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\x00\x08', 'val': ofproto.OFPAT_SET_NW_TOS}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_NW_TOS_SIZE}
+    tos = {'buf': b'\xb6', 'val': 182}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -828,7 +852,7 @@ class TestOFPActionSetNwTos(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x05', 'val': 5}
+        type_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -839,7 +863,7 @@ class TestOFPActionSetNwTos(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -852,8 +876,8 @@ class TestOFPActionSetNwTos(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_NW_TOS_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_NW_TOS_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -861,15 +885,15 @@ class TestOFPActionSetNwTos(unittest.TestCase):
 
 
 class TestOFPActionSetTpSrc(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetTpSrc
+    """ Test case for ofproto_v1_0_parser.OFPActionSetTpSrc
     """
 
     # OFP_ACTION_TP_PORT_PACK_STR
     # '!HHH2x'...type, len, tp, zfill
-    type_ = {'buf': '\x00\x09', 'val': ofproto_v1_0.OFPAT_SET_TP_SRC}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_TP_PORT_SIZE}
-    tp = {'buf': '\x07\xf1', 'val': 2033}
-    zfill = '\x00' * 2
+    type_ = {'buf': b'\x00\x09', 'val': ofproto.OFPAT_SET_TP_SRC}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_TP_PORT_SIZE}
+    tp = {'buf': b'\x07\xf1', 'val': 2033}
+    zfill = b'\x00' * 2
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -892,7 +916,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
         eq_(self.tp['val'], res.tp)
 
     def test_parser_dst(self):
-        type_ = {'buf': '\x00\x0a', 'val': ofproto_v1_0.OFPAT_SET_TP_DST}
+        type_ = {'buf': b'\x00\x0a', 'val': ofproto.OFPAT_SET_TP_DST}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -904,7 +928,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x07', 'val': 7}
+        type_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -915,7 +939,7 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -928,8 +952,8 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_TP_PORT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_TP_PORT_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -937,15 +961,15 @@ class TestOFPActionSetTpSrc(unittest.TestCase):
 
 
 class TestOFPActionSetTpDst(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionSetTpDst
+    """ Test case for ofproto_v1_0_parser.OFPActionSetTpDst
     """
 
     # OFP_ACTION_TP_PORT_PACK_STR
     # '!HHH2x'...type, len, tp, zfill
-    type_ = {'buf': '\x00\x0a', 'val': ofproto_v1_0.OFPAT_SET_TP_DST}
-    len_ = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_TP_PORT_SIZE}
-    tp = {'buf': '\x06\x6d', 'val': 1645}
-    zfill = '\x00' * 2
+    type_ = {'buf': b'\x00\x0a', 'val': ofproto.OFPAT_SET_TP_DST}
+    len_ = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_TP_PORT_SIZE}
+    tp = {'buf': b'\x06\x6d', 'val': 1645}
+    zfill = b'\x00' * 2
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -968,7 +992,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
         eq_(self.tp['val'], res.tp)
 
     def test_parser_src(self):
-        type_ = {'buf': '\x00\x09', 'val': ofproto_v1_0.OFPAT_SET_TP_SRC}
+        type_ = {'buf': b'\x00\x09', 'val': ofproto.OFPAT_SET_TP_SRC}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -980,7 +1004,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x10', 'val': 16}
+        type_ = {'buf': b'\x00\x10', 'val': 16}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -991,7 +1015,7 @@ class TestOFPActionSetTpDst(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x07', 'val': 7}
+        len_ = {'buf': b'\x00\x07', 'val': 7}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -1004,8 +1028,8 @@ class TestOFPActionSetTpDst(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_TP_PORT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_TP_PORT_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1013,16 +1037,16 @@ class TestOFPActionSetTpDst(unittest.TestCase):
 
 
 class TestOFPActionEnqueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPActionEnqueue
+    """ Test case for ofproto_v1_0_parser.OFPActionEnqueue
     """
 
     # OFP_ACTION_ENQUEUE_PACK_STR
     # '!HHH6xI'...type_, len_, port, zfill, queue_id
-    type_ = {'buf': '\x00\x0b', 'val': ofproto_v1_0.OFPAT_ENQUEUE}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.OFP_ACTION_ENQUEUE_SIZE}
-    port = {'buf': '\x04\x55', 'val': 1109}
-    zfill = '\x00' * 6
-    queue_id = {'buf': '\x0a\x5b\x03\x5e', 'val': 173736798}
+    type_ = {'buf': b'\x00\x0b', 'val': ofproto.OFPAT_ENQUEUE}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.OFP_ACTION_ENQUEUE_SIZE}
+    port = {'buf': b'\x04\x55', 'val': 1109}
+    zfill = b'\x00' * 6
+    queue_id = {'buf': b'\x0a\x5b\x03\x5e', 'val': 173736798}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1050,7 +1074,7 @@ class TestOFPActionEnqueue(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_type(self):
-        type_ = {'buf': '\x00\x0a', 'val': 10}
+        type_ = {'buf': b'\x00\x0a', 'val': 10}
 
         buf = type_['buf'] \
             + self.len_['buf'] \
@@ -1062,7 +1086,7 @@ class TestOFPActionEnqueue(unittest.TestCase):
 
     @raises(AssertionError)
     def test_parser_check_len(self):
-        len_ = {'buf': '\x00\x05', 'val': 5}
+        len_ = {'buf': b'\x00\x05', 'val': 5}
 
         buf = self.type_['buf'] \
             + len_['buf'] \
@@ -1076,8 +1100,8 @@ class TestOFPActionEnqueue(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.OFP_ACTION_ENQUEUE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.OFP_ACTION_ENQUEUE_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1086,18 +1110,18 @@ class TestOFPActionEnqueue(unittest.TestCase):
 
 
 class TestNXActionResubmit(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionResubmit
+    """ Test case for ofproto_v1_0_parser.NXActionResubmit
     """
 
     # NX_ACTION_RESUBMIT_PACK_STR
     # '!HHIHHB3x'...type, len, vendor, subtype, in_port, table, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': 8992}
-    subtype = {'buf': '\x00\x01', 'val': 1}
-    in_port = {'buf': '\x0a\x4c', 'val': 2636}
-    table = {'buf': '\x52', 'val': 82}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_RESUBMIT_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20', 'val': 8992}
+    subtype = {'buf': b'\x00\x01', 'val': 1}
+    in_port = {'buf': b'\x0a\x4c', 'val': 2636}
+    table = {'buf': b'\x52', 'val': 82}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1116,23 +1140,21 @@ class TestNXActionResubmit(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.in_port['val'], self.c.in_port)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
         eq_(self.in_port['val'], res.in_port)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_RESUBMIT_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1142,28 +1164,28 @@ class TestNXActionResubmit(unittest.TestCase):
 
 
 class TestNXActionResubmitTable(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionResubmitTable
+    """ Test case for ofproto_v1_0_parser.NXActionResubmitTable
     """
 
     # NX_ACTION_RESUBMIT_PACK_STR
     # '!HHIHHB3x'...type, len, vendor, subtype, in_port, table, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_RESUBMIT_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': 8992}
-    subtype = {'buf': '\x00\x0e', 'val': 14}
-    in_port = {'buf': '\x0a\x4c', 'val': 2636}
-    table = {'buf': '\x52', 'val': 82}
-    zfill = '\x00' * 3
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_RESUBMIT_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20', 'val': 8992}
+    subtype = {'buf': b'\x00\x0e', 'val': 14}
+    in_port = {'buf': b'\x0a\x4c', 'val': 2636}
+    table_id = {'buf': b'\x52', 'val': 82}
+    zfill = b'\x00' * 3
 
     buf = type_['buf'] \
         + len_['buf'] \
         + vendor['buf'] \
         + subtype['buf'] \
         + in_port['buf'] \
-        + table['buf'] \
+        + table_id['buf'] \
         + zfill
 
-    c = NXActionResubmitTable(in_port['val'], table['val'])
+    c = NXActionResubmitTable(in_port['val'], table_id['val'])
 
     def setUp(self):
         pass
@@ -1172,44 +1194,44 @@ class TestNXActionResubmitTable(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.in_port['val'], self.c.in_port)
+        eq_(self.table_id['val'], self.c.table_id)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
         eq_(self.in_port['val'], res.in_port)
-        eq_(self.table['val'], res.table)
+        eq_(self.table_id['val'], res.table_id)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_RESUBMIT_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_RESUBMIT_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
         eq_(self.vendor['val'], res[2])
         eq_(self.subtype['val'], res[3])
         eq_(self.in_port['val'], res[4])
+        eq_(self.table_id['val'], res[5])
 
 
 class TestNXActionSetTunnel(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionSetTunnel
+    """ Test case for ofproto_v1_0_parser.NXActionSetTunnel
     """
 
     # NX_ACTION_SET_TUNNEL_PACK_STR
     # '!HHIH2xI'...type, len, vendor, subtype, zfill, tun_id
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': 8992}
-    subtype = {'buf': '\x00\x02', 'val': 2}
-    zfill = '\x00' * 2
-    tun_id = {'buf': '\x01\x6f\x01\xd0', 'val': 24052176}
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20', 'val': 8992}
+    subtype = {'buf': b'\x00\x02', 'val': 2}
+    zfill = b'\x00' * 2
+    tun_id = {'buf': b'\x01\x6f\x01\xd0', 'val': 24052176}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1227,22 +1249,21 @@ class TestNXActionSetTunnel(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.tun_id['val'], self.c.tun_id)
 
-    def test_parser(self):
-        res = self.c.parser(self.buf, 0)
+    def test_parse(self):
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
         eq_(self.tun_id['val'], res.tun_id)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_SET_TUNNEL_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_SET_TUNNEL_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1252,17 +1273,18 @@ class TestNXActionSetTunnel(unittest.TestCase):
 
 
 class TestNXActionSetQueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionSetQueue
+    """ Test case for ofproto_v1_0_parser.NXActionSetQueue
     """
 
     # NX_ACTION_SET_QUEUE_PACK_STR
     # '!HHIH2xI'...type, len, vendor, subtype, zfill, queue_id
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x04', 'val': ofproto_v1_0.NXAST_SET_QUEUE}
-    zfill = '\x00' * 2
-    queue_id = {'buf': '\xde\xbe\xc5\x18', 'val': 3737044248}
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x04', 'val': ofproto.NXAST_SET_QUEUE}
+    zfill = b'\x00' * 2
+    queue_id = {'buf': b'\xde\xbe\xc5\x18', 'val': 3737044248}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1280,22 +1302,21 @@ class TestNXActionSetQueue(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.queue_id['val'], self.c.queue_id)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
         eq_(self.queue_id['val'], res.queue_id)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_SET_QUEUE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_SET_QUEUE_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1305,16 +1326,17 @@ class TestNXActionSetQueue(unittest.TestCase):
 
 
 class TestNXActionPopQueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionPopQueue
+    """ Test case for ofproto_v1_0_parser.NXActionPopQueue
     """
 
     # NX_ACTION_POP_QUEUE_PACK_STR
     # '!HHIH6x'...type, len, vendor, subtype, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_SET_TUNNEL_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x05', 'val': ofproto_v1_0.NXAST_POP_QUEUE}
-    zfill = '\x00' * 6
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_SET_TUNNEL_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x05', 'val': ofproto.NXAST_POP_QUEUE}
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1331,24 +1353,20 @@ class TestNXActionPopQueue(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
+        res = OFPActionVendor.parser(self.buf, 0)
         eq_(self.type_['val'], res.type)
         eq_(self.len_['val'], res.len)
-        eq_(self.vendor['val'], res.vendor)
         eq_(self.subtype['val'], res.subtype)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_POP_QUEUE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_POP_QUEUE_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1357,21 +1375,22 @@ class TestNXActionPopQueue(unittest.TestCase):
 
 
 class TestNXActionRegMove(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionRegMove
+    """ Test case for ofproto_v1_0_parser.NXActionRegMove
     """
 
     # NX_ACTION_REG_MOVE_PACK_STR
     # '!HHIHHHHII'...type_, len_, vendor, subtype, n_bits,
     #                src_ofs, dst_ofs, src, dst
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x18', 'val': ofproto_v1_0.NX_ACTION_REG_MOVE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x06', 'val': ofproto_v1_0.NXAST_REG_MOVE}
-    n_bits = {'buf': '\x3d\x98', 'val': 15768}
-    src_ofs = {'buf': '\xf3\xa3', 'val': 62371}
-    dst_ofs = {'buf': '\xdc\x67', 'val': 56423}
-    src = {'buf': '\x15\x68\x60\xfd', 'val': 359162109}
-    dst = {'buf': '\x9f\x9f\x88\x26', 'val': 2678032422}
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x06', 'val': ofproto.NXAST_REG_MOVE}
+    n_bits = {'buf': b'\x3d\x98', 'val': 15768}
+    src_ofs = {'buf': b'\xf3\xa3', 'val': 62371}
+    dst_ofs = {'buf': b'\xdc\x67', 'val': 56423}
+    src_field = {'buf': b'\x00\x01\x00\x04', 'val': "reg0", "val2": 65540}
+    dst_field = {'buf': b'\x00\x01\x02\x04', 'val': "reg1", "val2": 66052}
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1380,14 +1399,14 @@ class TestNXActionRegMove(unittest.TestCase):
         + n_bits['buf'] \
         + src_ofs['buf'] \
         + dst_ofs['buf'] \
-        + src['buf'] \
-        + dst['buf']
+        + src_field['buf'] \
+        + dst_field['buf']
 
-    c = NXActionRegMove(n_bits['val'],
+    c = NXActionRegMove(src_field['val'],
+                        dst_field['val'],
+                        n_bits['val'],
                         src_ofs['val'],
-                        dst_ofs['val'],
-                        src['val'],
-                        dst['val'])
+                        dst_ofs['val'])
 
     def setUp(self):
         pass
@@ -1396,30 +1415,30 @@ class TestNXActionRegMove(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
+        eq_(self.src_field['val'], self.c.src_field)
+        eq_(self.dst_field['val'], self.c.dst_field)
         eq_(self.n_bits['val'], self.c.n_bits)
-        eq_(self.src_ofs['val'], self.c.src_ofs)
-        eq_(self.dst_ofs['val'], self.c.dst_ofs)
-        eq_(self.src['val'], self.c.src)
-        eq_(self.dst['val'], self.c.dst)
+        eq_(self.src_field['val'], self.c.src_field)
+        eq_(self.dst_field['val'], self.c.dst_field)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-        eq_(self.n_bits['val'], res.n_bits)
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
+        eq_(self.subtype['val'], res.subtype)
         eq_(self.src_ofs['val'], res.src_ofs)
         eq_(self.dst_ofs['val'], res.dst_ofs)
-        eq_(self.src['val'], res.src)
-        eq_(self.dst['val'], res.dst)
+        eq_(self.n_bits['val'], res.n_bits)
+        eq_(self.src_field['val'], res.src_field)
+        eq_(self.dst_field['val'], res.dst_field)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_REG_MOVE_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_REG_MOVE_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1428,25 +1447,28 @@ class TestNXActionRegMove(unittest.TestCase):
         eq_(self.n_bits['val'], res[4])
         eq_(self.src_ofs['val'], res[5])
         eq_(self.dst_ofs['val'], res[6])
-        eq_(self.src['val'], res[7])
-        eq_(self.dst['val'], res[8])
+        eq_(self.src_field['val2'], res[7])
+        eq_(self.dst_field['val2'], res[8])
 
 
 class TestNXActionRegLoad(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionRegLoad
+    """ Test case for ofproto_v1_0_parser.NXActionRegLoad
     """
 
     # NX_ACTION_REG_LOAD_PACK_STR
     # '!HHIHHIQ'...type_, len_, vendor, subtype,
     #              ofs_nbits, dst, value
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x18', 'val': ofproto_v1_0.NX_ACTION_REG_MOVE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x07', 'val': ofproto_v1_0.NXAST_REG_LOAD}
-    ofs_nbits = {'buf': '\x3d\x98',  'val': 15768}
-    dst = {'buf': '\x9f\x9f\x88\x26',  'val': 2678032422}
-    value = {'buf': '\x33\x51\xcd\x43\x25\x28\x18\x99',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x18', 'val': ofproto.NX_ACTION_REG_MOVE_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x07', 'val': ofproto.NXAST_REG_LOAD}
+    ofs_nbits = {'buf': b'\x3d\x98', 'val': 15768}
+    dst = {'buf': b'\x00\x01\x00\x04', 'val': "reg0", "val2": 65540}
+    value = {'buf': b'\x33\x51\xcd\x43\x25\x28\x18\x99',
              'val': 3697962457317775513}
+    start = 246
+    end = 270
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1467,17 +1489,16 @@ class TestNXActionRegLoad(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
         eq_(self.dst['val'], self.c.dst)
         eq_(self.value['val'], self.c.value)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
+        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
         eq_(self.dst['val'], res.dst)
         eq_(self.value['val'], res.value)
 
@@ -1485,30 +1506,31 @@ class TestNXActionRegLoad(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_REG_LOAD_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_REG_LOAD_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
         eq_(self.vendor['val'], res[2])
         eq_(self.subtype['val'], res[3])
         eq_(self.ofs_nbits['val'], res[4])
-        eq_(self.dst['val'], res[5])
+        eq_(self.dst['val2'], res[5])
         eq_(self.value['val'], res[6])
 
 
 class TestNXActionSetTunnel64(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionSetTunnel64
+    """ Test case for ofproto_v1_0_parser.NXActionSetTunnel64
     """
 
     # NX_ACTION_SET_TUNNEL64_PACK_STR
     # '!HHIH6xQ'...type, len, vendor, subtype, zfill, tun_id
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x18', 'val': ofproto_v1_0.NX_ACTION_SET_TUNNEL64_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x09', 'val': ofproto_v1_0.NXAST_SET_TUNNEL64}
-    zfill = '\x00' * 6
-    tun_id = {'buf': '\x6e\x01\xa6\xea\x7e\x36\x1d\xd9',
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x18', 'val': ofproto.NX_ACTION_SET_TUNNEL64_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x09', 'val': ofproto.NXAST_SET_TUNNEL64}
+    zfill = b'\x00' * 6
+    tun_id = {'buf': b'\x6e\x01\xa6\xea\x7e\x36\x1d\xd9',
               'val': 7926800345218817497}
 
     buf = type_['buf'] \
@@ -1527,22 +1549,22 @@ class TestNXActionSetTunnel64(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.tun_id['val'], self.c.tun_id)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-        eq_(self.tun_id['val'], self.c.tun_id)
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
+        eq_(self.subtype['val'], res.subtype)
+        eq_(self.tun_id['val'], res.tun_id)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_SET_TUNNEL64_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_SET_TUNNEL64_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1552,25 +1574,28 @@ class TestNXActionSetTunnel64(unittest.TestCase):
 
 
 class TestNXActionMultipath(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionMultipath
+    """ Test case for ofproto_v1_0_parser.NXActionMultipath
     """
 
     # NX_ACTION_MULTIPATH_PACK_STR
     # '!HHIHHH2xHHI2xHI'...type, len, vendor, subtype, fields, basis, zfill
     #                      algorithm, max_link, arg, zfill, ofs_nbits, dst
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto_v1_0.NX_ACTION_MULTIPATH_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x0a', 'val': ofproto_v1_0.NXAST_MULTIPATH}
-    fields = {'buf': '\x6d\xf5', 'val': 28149}
-    basis = {'buf': '\x7c\x0a', 'val': 31754}
-    zfill0 = '\x00' * 2
-    algorithm = {'buf': '\x82\x1d', 'val': 33309}
-    max_link = {'buf': '\x06\x2b', 'val': 1579}
-    arg = {'buf': '\x18\x79\x41\xc8', 'val': 410599880}
-    zfill1 = '\x00' * 2
-    ofs_nbits = {'buf': '\xa9\x9a', 'val': 43418}
-    dst = {'buf': '\xb9\x2f\x16\x64', 'val': 3106870884}
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x20', 'val': ofproto.NX_ACTION_MULTIPATH_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x0a', 'val': ofproto.NXAST_MULTIPATH}
+    fields = {'buf': b'\x6d\xf5', 'val': 28149}
+    basis = {'buf': b'\x7c\x0a', 'val': 31754}
+    zfill0 = b'\x00' * 2
+    algorithm = {'buf': b'\x82\x1d', 'val': 33309}
+    max_link = {'buf': b'\x06\x2b', 'val': 1579}
+    arg = {'buf': b'\x18\x79\x41\xc8', 'val': 410599880}
+    zfill1 = b'\x00' * 2
+    ofs_nbits = {'buf': b'\xa9\x9a', 'val': 43418}
+    dst = {'buf': b'\x00\x01\x00\x04', 'val': "reg0", 'val2': 65540}
+    start = 678
+    end = 704
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1601,6 +1626,7 @@ class TestNXActionMultipath(unittest.TestCase):
         pass
 
     def test_init(self):
+        eq_(self.subtype['val'], self.c.subtype)
         eq_(self.fields['val'], self.c.fields)
         eq_(self.basis['val'], self.c.basis)
         eq_(self.algorithm['val'], self.c.algorithm)
@@ -1610,8 +1636,10 @@ class TestNXActionMultipath(unittest.TestCase):
         eq_(self.dst['val'], self.c.dst)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
+        res = OFPActionVendor.parser(self.buf, 0)
+        eq_(self.type_['val'], res.type)
+        eq_(self.len_['val'], res.len)
+        eq_(self.subtype['val'], res.subtype)
         eq_(self.fields['val'], res.fields)
         eq_(self.basis['val'], res.basis)
         eq_(self.algorithm['val'], res.algorithm)
@@ -1624,8 +1652,8 @@ class TestNXActionMultipath(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_MULTIPATH_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_MULTIPATH_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -1637,31 +1665,32 @@ class TestNXActionMultipath(unittest.TestCase):
         eq_(self.max_link['val'], res[7])
         eq_(self.arg['val'], res[8])
         eq_(self.ofs_nbits['val'], res[9])
-        eq_(self.dst['val'], res[10])
+        eq_(self.dst['val2'], res[10])
 
 
 class TestNXActionBundle(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionBundle
+    """ Test case for ofproto_v1_0_parser.NXActionBundle
     """
 
     # NX_ACTION_BUNDLE_PACK_STR
     # '!HHIHHHHIHHI4x'...type, len, vendor, subtype, algorithm,
     #                    fields, basis, slave_type, n_slaves,
     #                    ofs_nbits, dst, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto_v1_0.NX_ACTION_BUNDLE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x0c', 'val': ofproto_v1_0.NXAST_BUNDLE}
-    algorithm = {'buf': '\x51\xa7', 'val': 20903}
-    fields = {'buf': '\xf8\xef', 'val': 63727}
-    basis = {'buf': '\xfd\x6f', 'val': 64879}
-    slave_type = {'buf': '\x7c\x51\x0f\xe0', 'val': 2085687264}
-    n_slaves = {'buf': '\x00\x02', 'val': 2}
-    ofs_nbits = {'buf': '\xec\xf7', 'val': 60663}
-    dst = {'buf': '\x50\x7c\x75\xfe', 'val': 1350333950}
-    zfill = '\x00' * 4
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x28', 'val': (ofproto.NX_ACTION_BUNDLE_SIZE + 8)}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x0c', 'val': ofproto.NXAST_BUNDLE}
+    algorithm = {'buf': b'\x51\xa7', 'val': 20903}
+    fields = {'buf': b'\xf8\xef', 'val': 63727}
+    basis = {'buf': b'\xfd\x6f', 'val': 64879}
+    slave_type = {'buf': b'\x7c\x51\x0f\xe0', 'val': 2085687264}
+    n_slaves = {'buf': b'\x00\x02', 'val': 2}
+    ofs_nbits = {'buf': b'\x00\x00', 'val': 0}
+    dst = {'buf': b'\x00\x00\x00\x00', 'val': 0}
+    zfill = b'\x00' * 4
 
-    slaves_buf = ('\x00\x01', '\x00\x02')
+    slaves_buf = (b'\x00\x01', b'\x00\x02')
     slaves_val = (1, 2)
 
     _len = len_['val'] + len(slaves_val) * 2
@@ -1698,9 +1727,6 @@ class TestNXActionBundle(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self._len, self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.algorithm['val'], self.c.algorithm)
         eq_(self.fields['val'], self.c.fields)
@@ -1716,11 +1742,9 @@ class TestNXActionBundle(unittest.TestCase):
         eq_(self.slaves_val[1], slaves[1])
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
+        res = OFPActionVendor.parser(self.buf, 0)
         eq_(self.type_['val'], res.type)
-        eq_(self._len, res.len)
-        eq_(self.vendor['val'], res.vendor)
+        eq_(self.len_['val'], res.len)
         eq_(self.subtype['val'], res.subtype)
         eq_(self.algorithm['val'], res.algorithm)
         eq_(self.fields['val'], res.fields)
@@ -1740,13 +1764,13 @@ class TestNXActionBundle(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = '!' \
-            + ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR.replace('!', '') \
+            + ofproto.NX_ACTION_BUNDLE_PACK_STR.replace('!', '') \
             + 'HH4x'
 
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
-        eq_(self._len, res[1])
+        eq_(self.len_['val'], res[1])
         eq_(self.vendor['val'], res[2])
         eq_(self.subtype['val'], res[3])
         eq_(self.algorithm['val'], res[4])
@@ -1759,27 +1783,28 @@ class TestNXActionBundle(unittest.TestCase):
 
 
 class TestNXActionBundleLoad(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionBundleLoad
+    """ Test case for ofproto_v1_0_parser.NXActionBundleLoad
     """
 
     # NX_ACTION_BUNDLE_PACK_STR
     # '!HHIHHHHIHHI4x'...type, len, vendor, subtype, algorithm,
     #                    fields, basis, slave_type, n_slaves,
     #                    ofs_nbits, dst, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto_v1_0.NX_ACTION_BUNDLE_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x0d', 'val': ofproto_v1_0.NXAST_BUNDLE_LOAD}
-    algorithm = {'buf': '\x83\x15', 'val': 33557}
-    fields = {'buf': '\xc2\x7a', 'val': 49786}
-    basis = {'buf': '\x86\x18', 'val': 34328}
-    slave_type = {'buf': '\x18\x42\x0b\x55', 'val': 406981461}
-    n_slaves = {'buf': '\x00\x02', 'val': 2}
-    ofs_nbits = {'buf': '\xd2\x9d', 'val': 53917}
-    dst = {'buf': '\x37\xfe\xb3\x60', 'val': 939438944}
-    zfill = '\x00' * 4
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x28', 'val': (ofproto.NX_ACTION_BUNDLE_SIZE + 8)}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x0d', 'val': ofproto.NXAST_BUNDLE_LOAD}
+    algorithm = {'buf': b'\x83\x15', 'val': 33557}
+    fields = {'buf': b'\xc2\x7a', 'val': 49786}
+    basis = {'buf': b'\x86\x18', 'val': 34328}
+    slave_type = {'buf': b'\x18\x42\x0b\x55', 'val': 406981461}
+    n_slaves = {'buf': b'\x00\x02', 'val': 2}
+    ofs_nbits = {'buf': b'\xd2\x9d', 'val': 53917}
+    dst = {'buf': b'\x00\x01\x00\x04', 'val': "reg0", 'val2': 65540}
+    zfill = b'\x00' * 4
 
-    slaves_buf = ('\x00\x01', '\x00\x02')
+    slaves_buf = (b'\x00\x01', b'\x00\x02')
     slaves_val = (1, 2)
 
     _len = len_['val'] + len(slaves_val) * 2
@@ -1816,9 +1841,6 @@ class TestNXActionBundleLoad(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self._len, self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.algorithm['val'], self.c.algorithm)
         eq_(self.fields['val'], self.c.fields)
@@ -1834,11 +1856,9 @@ class TestNXActionBundleLoad(unittest.TestCase):
         eq_(self.slaves_val[1], slaves[1])
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
+        res = OFPActionVendor.parser(self.buf, 0)
         eq_(self.type_['val'], res.type)
-        eq_(self._len, res.len)
-        eq_(self.vendor['val'], res.vendor)
+        eq_(self.len_['val'], res.len)
         eq_(self.subtype['val'], res.subtype)
         eq_(self.algorithm['val'], res.algorithm)
         eq_(self.fields['val'], res.fields)
@@ -1858,13 +1878,13 @@ class TestNXActionBundleLoad(unittest.TestCase):
         self.c.serialize(buf, 0)
 
         fmt = '!' \
-            + ofproto_v1_0.NX_ACTION_BUNDLE_PACK_STR.replace('!', '') \
+            + ofproto.NX_ACTION_BUNDLE_PACK_STR.replace('!', '') \
             + 'HH4x'
 
-        res = struct.unpack(fmt, buffer(buf))
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
-        eq_(self._len, res[1])
+        eq_(self.len_['val'], res[1])
         eq_(self.vendor['val'], res[2])
         eq_(self.subtype['val'], res[3])
         eq_(self.algorithm['val'], res[4])
@@ -1873,95 +1893,25 @@ class TestNXActionBundleLoad(unittest.TestCase):
         eq_(self.slave_type['val'], res[7])
         eq_(self.n_slaves['val'], res[8])
         eq_(self.ofs_nbits['val'], res[9])
-        eq_(self.dst['val'], res[10])
-
-
-class TestNXActionAutopath(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionAutopath
-    """
-
-    # NX_ACTION_AUTOPATH_PACK_STR
-    # '!HHIHHII4x'...type, len, vendor, subtype, ofs_nbits,
-    #                dst, id_, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto_v1_0.NX_ACTION_OUTPUT_REG_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x0b', 'val': ofproto_v1_0.NXAST_AUTOPATH}
-    ofs_nbits = {'buf': '\xfe\x78', 'val': 65144}
-    dst = {'buf': '\xf8\x55\x74\x95', 'val': 4166349973}
-    id_ = {'buf': '\x02\x2d\x37\xed', 'val': 36517869}
-    zfill = '\x00' * 4
-
-    buf = type_['buf'] \
-        + len_['buf'] \
-        + vendor['buf'] \
-        + subtype['buf'] \
-        + ofs_nbits['buf'] \
-        + dst['buf'] \
-        + id_['buf'] \
-        + zfill
-
-    c = NXActionAutopath(ofs_nbits['val'],
-                         dst['val'],
-                         id_['val'])
-
-    def setUp(self):
-        pass
-
-    def tearDown(self):
-        pass
-
-    def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
-        eq_(self.subtype['val'], self.c.subtype)
-        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
-        eq_(self.dst['val'], self.c.dst)
-        eq_(self.id_['val'], self.c.id)
-
-    def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
-        eq_(self.type_['val'], res.type)
-        eq_(self.len_['val'], res.len)
-        eq_(self.vendor['val'], res.vendor)
-        eq_(self.subtype['val'], res.subtype)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
-        eq_(self.dst['val'], res.dst)
-        eq_(self.id_['val'], res.id)
-
-    def test_serialize(self):
-        buf = bytearray()
-        self.c.serialize(buf, 0)
-
-        fmt = ofproto_v1_0.NX_ACTION_AUTOPATH_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
-
-        eq_(self.type_['val'], res[0])
-        eq_(self.len_['val'], res[1])
-        eq_(self.vendor['val'], res[2])
-        eq_(self.subtype['val'], res[3])
-        eq_(self.ofs_nbits['val'], res[4])
-        eq_(self.dst['val'], res[5])
-        eq_(self.id_['val'], res[6])
+        eq_(self.dst['val2'], res[10])
 
 
 class TestNXActionOutputReg(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionOutputReg
+    """ Test case for ofproto_v1_0_parser.NXActionOutputReg
     """
 
     # NX_ACTION_OUTPUT_REG_PACK_STR
     # '!HHIHHIH6x'...type, len, vendor, subtype, ofs_nbits,
     #                    src, max_len, zfill
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x20', 'val': ofproto_v1_0.NX_ACTION_OUTPUT_REG_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x0f', 'val': ofproto_v1_0.NXAST_OUTPUT_REG}
-    ofs_nbits = {'buf': '\xfe\x78', 'val': 65144}
-    src = {'buf': '\x5e\x3a\x04\x26', 'val': 1580860454}
-    max_len = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE}
-    zfill = '\x00' * 6
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x18', 'val': ofproto.NX_ACTION_OUTPUT_REG_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x0f', 'val': ofproto.NXAST_OUTPUT_REG}
+    ofs_nbits = {'buf': b'\xfe\x78', 'val': 65144}
+    src = {'buf': b'\x00\x01\x00\x04', 'val': "reg0", 'val2': 65540}
+    max_len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -1983,22 +1933,17 @@ class TestNXActionOutputReg(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
         eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
         eq_(self.src['val'], self.c.src)
         eq_(self.max_len['val'], self.c.max_len)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
-
+        res = OFPActionVendor.parser(self.buf, 0)
         eq_(self.type_['val'], res.type)
         eq_(self.len_['val'], res.len)
-        eq_(self.vendor['val'], res.vendor)
         eq_(self.subtype['val'], res.subtype)
-        eq_(self.ofs_nbits['val'], res.ofs_nbits)
+        eq_(self.ofs_nbits['val'], self.c.ofs_nbits)
         eq_(self.src['val'], res.src)
         eq_(self.max_len['val'], res.max_len)
 
@@ -2006,29 +1951,30 @@ class TestNXActionOutputReg(unittest.TestCase):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_OUTPUT_REG_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_OUTPUT_REG_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
         eq_(self.vendor['val'], res[2])
         eq_(self.subtype['val'], res[3])
         eq_(self.ofs_nbits['val'], res[4])
-        eq_(self.src['val'], res[5])
+        eq_(self.src['val2'], res[5])
         eq_(self.max_len['val'], res[6])
 
 
 class TestNXActionExit(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXActionExit
+    """ Test case for ofproto_v1_0_parser.NXActionExit
     """
 
     # NX_ACTION_HEADER_PACK_STR
     # '!HHIH'...type, len, vendor, subtype
-    type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
-    len_ = {'buf': '\x00\x10', 'val': ofproto_v1_0.NX_ACTION_HEADER_SIZE}
-    vendor = {'buf': '\x00\x00\x23\x20', 'val': ofproto_v1_0.NX_VENDOR_ID}
-    subtype = {'buf': '\x00\x11', 'val': ofproto_v1_0.NXAST_EXIT}
-    zfill = '\x00' * 6
+    type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPAT_VENDOR}
+    len_ = {'buf': b'\x00\x10', 'val': ofproto.NX_ACTION_HEADER_SIZE}
+    vendor = {'buf': b'\x00\x00\x23\x20',
+              'val': ofproto_common.NX_EXPERIMENTER_ID}
+    subtype = {'buf': b'\x00\x11', 'val': ofproto.NXAST_EXIT}
+    zfill = b'\x00' * 6
 
     buf = type_['buf'] \
         + len_['buf'] \
@@ -2045,24 +1991,20 @@ class TestNXActionExit(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(self.type_['val'], self.c.type)
-        eq_(self.len_['val'], self.c.len)
-        eq_(self.vendor['val'], self.c.vendor)
         eq_(self.subtype['val'], self.c.subtype)
 
     def test_parser(self):
-        res = self.c.parser(self.buf, 0)
+        res = OFPActionVendor.parser(self.buf, 0)
         eq_(self.type_['val'], res.type)
         eq_(self.len_['val'], res.len)
-        eq_(self.vendor['val'], res.vendor)
         eq_(self.subtype['val'], res.subtype)
 
     def test_serialize(self):
         buf = bytearray()
         self.c.serialize(buf, 0)
 
-        fmt = ofproto_v1_0.NX_ACTION_HEADER_PACK_STR
-        res = struct.unpack(fmt, buffer(buf))
+        fmt = ofproto.NX_ACTION_HEADER_PACK_STR
+        res = struct.unpack(fmt, six.binary_type(buf))
 
         eq_(self.type_['val'], res[0])
         eq_(self.len_['val'], res[1])
@@ -2071,16 +2013,16 @@ class TestNXActionExit(unittest.TestCase):
 
 
 class TestOFPDescStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPDescStats
+    """ Test case for ofproto_v1_0_parser.OFPDescStats
     """
 
     # OFP_DESC_STATS_PACK_STR
     # '!256s256s256s32s256s'...mfr_desc, hw_desc, sw_desc, serial_num, dp_desc
-    mfr_desc = 'mfr_desc'.ljust(256)
-    hw_desc = 'hw_desc'.ljust(256)
-    sw_desc = 'sw_desc'.ljust(256)
-    serial_num = 'serial_num'.ljust(32)
-    dp_desc = 'dp_desc'.ljust(256)
+    mfr_desc = b'mfr_desc'.ljust(256)
+    hw_desc = b'hw_desc'.ljust(256)
+    sw_desc = b'sw_desc'.ljust(256)
+    serial_num = b'serial_num'.ljust(32)
+    dp_desc = b'dp_desc'.ljust(256)
 
     buf = mfr_desc \
         + hw_desc \
@@ -2114,56 +2056,56 @@ class TestOFPDescStats(unittest.TestCase):
 
 
 class TestOFPFlowStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowStats
+    """ Test case for ofproto_v1_0_parser.OFPFlowStats
     """
 
     # OFP_FLOW_STATS_0_PACK_STR
     # '!HBx'...length, table_id, zfill
-    length = {'buf': '\x00\x58', 'val': 88}
-    length_append_action = {'buf': '\x00\x60', 'val': 96}
-    table_id = {'buf': '\x51', 'val': 81}
-    zfill_0 = '\x00'
+    length = {'buf': b'\x00\x58', 'val': 88}
+    length_append_action = {'buf': b'\x00\x60', 'val': 96}
+    table_id = {'buf': b'\x51', 'val': 81}
+    zfill_0 = b'\x00'
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...
-    match = '\x97\x7c\xa6\x1e' \
-        + '\x5e\xa0' \
-        + '\x7a\x3e\xed\x30\x4a\x90' \
-        + '\x96\x8e\x67\xbe\x2f\xe2' \
-        + '\xb1\x81' \
-        + '\xbe' \
-        + '\x00' \
-        + '\x01\xab' \
-        + '\x42' \
-        + '\xfe' \
-        + '\x00\x00' \
-        + '\xa4\x5d\x5c\x42' \
-        + '\xa2\x5c\x2e\x05' \
-        + '\x5a\x94' \
-        + '\x64\xd4'
+    match = b'\x97\x7c\xa6\x1e' \
+        + b'\x5e\xa0' \
+        + b'\x7a\x3e\xed\x30\x4a\x90' \
+        + b'\x96\x8e\x67\xbe\x2f\xe2' \
+        + b'\xb1\x81' \
+        + b'\xbe' \
+        + b'\x00' \
+        + b'\x01\xab' \
+        + b'\x42' \
+        + b'\xfe' \
+        + b'\x00\x00' \
+        + b'\xa4\x5d\x5c\x42' \
+        + b'\xa2\x5c\x2e\x05' \
+        + b'\x5a\x94' \
+        + b'\x64\xd4'
 
     # OFP_FLOW_STATS_1_PACK_STR
     # '!IIHHH6xQQQ'...duration_sec, duration_nsec, priority,
     #                 idle_timeout, hard_timeout, zfill,
     #                 cookie, packet_count, byte_count
-    duration_sec = {'buf': '\x94\x19\xb3\xd2', 'val': 2484712402}
-    duration_nsec = {'buf': '\xee\x66\xcf\x7c', 'val': 3999715196}
-    priority = {'buf': '\xe1\xc0', 'val': 57792}
-    idle_timeout = {'buf': '\x8e\x10', 'val': 36368}
-    hard_timeout = {'buf': '\xd4\x99', 'val': 54425}
-    zfill_1 = '\x00\x00\x00\x00\x00\x00'
-    cookie = {'buf': '\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
+    duration_sec = {'buf': b'\x94\x19\xb3\xd2', 'val': 2484712402}
+    duration_nsec = {'buf': b'\xee\x66\xcf\x7c', 'val': 3999715196}
+    priority = {'buf': b'\xe1\xc0', 'val': 57792}
+    idle_timeout = {'buf': b'\x8e\x10', 'val': 36368}
+    hard_timeout = {'buf': b'\xd4\x99', 'val': 54425}
+    zfill_1 = b'\x00\x00\x00\x00\x00\x00'
+    cookie = {'buf': b'\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
               'val': 793171083674290912}
-    packet_count = {'buf': '\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
+    packet_count = {'buf': b'\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
                     'val': 5142202600015232219}
-    byte_count = {'buf': '\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
+    byte_count = {'buf': b'\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
                   'val': 2659740543924820419}
 
     # <action>_PACK_STR...type_, len_ [others...]
-    type = {'buf': '\x00\x00', 'val': ofproto_v1_0.OFPAT_OUTPUT}
-    len = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE}
-    port = {'buf': '\x59\x2a', 'val': 22826}
-    max_len = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE}
+    type = {'buf': b'\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
+    len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+    port = {'buf': b'\x59\x2a', 'val': 22826}
+    max_len = {'buf': b'\x00\x08', 'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
     action = (type, len, port, max_len)
 
     ACTION_TYPE = 0
@@ -2230,17 +2172,17 @@ class TestOFPFlowStats(unittest.TestCase):
 
 
 class TestOFPAggregateStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPAggregateStats
+    """ Test case for ofproto_v1_0_parser.OFPAggregateStats
     """
 
     # OFP_AGGREGATE_STATS_REPLY_PACK_STR
     # '!QQI4x'...packet_count, byte_count, flow_count, zfill
-    packet_count = {'buf': '\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
+    packet_count = {'buf': b'\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
                     'val': 4869829337189623773}
-    byte_count = {'buf': '\x36\xda\x2d\x80\x2a\x95\x35\xdd',
+    byte_count = {'buf': b'\x36\xda\x2d\x80\x2a\x95\x35\xdd',
                   'val': 3952521651464517085}
-    flow_count = {'buf': '\xc3\x0d\xc3\xed', 'val': 3272459245}
-    zfill = '\x00' * 4
+    flow_count = {'buf': b'\xc3\x0d\xc3\xed', 'val': 3272459245}
+    zfill = b'\x00' * 4
 
     buf = packet_count['buf'] \
         + byte_count['buf'] \
@@ -2272,21 +2214,21 @@ class TestOFPAggregateStats(unittest.TestCase):
 
 
 class TestOFPTableStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPTableStats
+    """ Test case for ofproto_v1_0_parser.OFPTableStats
     """
 
     # OFP_TABLE_STATS_PACK_STR
     # '!B3x32sIIIQQ'...table_id, zfill, name, wildcards, max_entries,
     #                  active_count, lookup_count, matched_count
-    table_id = {'buf': '\x5b', 'val': 91}
-    zfill = '\x00' * 3
-    name = 'name'.ljust(32)
-    wildcards = {'buf': '\xc5\xaf\x6e\x12', 'val': 3316608530}
-    max_entries = {'buf': '\x95\x6c\x78\x4d', 'val': 2506913869}
-    active_count = {'buf': '\x78\xac\xa8\x1e', 'val': 2024581150}
-    lookup_count = {'buf': '\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
+    table_id = {'buf': b'\x5b', 'val': 91}
+    zfill = b'\x00' * 3
+    name = b'name'.ljust(32)
+    wildcards = {'buf': b'\xc5\xaf\x6e\x12', 'val': 3316608530}
+    max_entries = {'buf': b'\x95\x6c\x78\x4d', 'val': 2506913869}
+    active_count = {'buf': b'\x78\xac\xa8\x1e', 'val': 2024581150}
+    lookup_count = {'buf': b'\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
                     'val': 4620020561814017052}
-    matched_count = {'buf': '\x27\x35\x02\xb6\xc5\x5e\x17\x65',
+    matched_count = {'buf': b'\x27\x35\x02\xb6\xc5\x5e\x17\x65',
                      'val': 2825167325263435621}
 
     buf = table_id['buf'] \
@@ -2334,7 +2276,7 @@ class TestOFPTableStats(unittest.TestCase):
 
 
 class TestOFPPortStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStats
+    """ Test case for ofproto_v1_0_parser.OFPPortStats
     """
 
     # OFP_PORT_STATS_PACK_STR
@@ -2342,31 +2284,31 @@ class TestOFPPortStats(unittest.TestCase):
     #                       rx_bytes, tx_bytes, rx_dropped, tx_dropped,
     #                       rx_errors, tx_errors, rx_frame_err,
     #                       rx_over_err, rx_crc_err, collisions
-    port_no = {'buf': '\xe7\x6b', 'val': 59243}
-    zfill = '\x00' * 6
-    rx_packets = {'buf': '\x53\x44\x36\x61\xc4\x86\xc0\x37',
+    port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+    zfill = b'\x00' * 6
+    rx_packets = {'buf': b'\x53\x44\x36\x61\xc4\x86\xc0\x37',
                   'val': 5999980397101236279}
-    tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+    tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                   'val': 2856480458895760962}
-    rx_bytes = {'buf': '\x55\xa1\x38\x60\x43\x97\x0d\x89',
+    rx_bytes = {'buf': b'\x55\xa1\x38\x60\x43\x97\x0d\x89',
                 'val': 6170274950576278921}
-    tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+    tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                 'val': 8638420181865882538}
-    rx_dropped = {'buf': '\x60\xe6\x20\x01\x24\xda\x4e\x5a',
+    rx_dropped = {'buf': b'\x60\xe6\x20\x01\x24\xda\x4e\x5a',
                   'val': 6982303461569875546}
-    tx_dropped = {'buf': '\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
+    tx_dropped = {'buf': b'\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
                   'val': 661287462113808071}
-    rx_errors = {'buf': '\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
+    rx_errors = {'buf': b'\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
                  'val': 3422231811478788365}
-    tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+    tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                  'val': 6283093430376743019}
-    rx_frame_err = {'buf': '\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
+    rx_frame_err = {'buf': b'\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
                     'val': 876072919806406283}
-    rx_over_err = {'buf': '\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
+    rx_over_err = {'buf': b'\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
                    'val': 6525873760178941600}
-    rx_crc_err = {'buf': '\x73\x3a\x71\x17\xd6\x74\x69\x47',
+    rx_crc_err = {'buf': b'\x73\x3a\x71\x17\xd6\x74\x69\x47',
                   'val': 8303073210207070535}
-    collisions = {'buf': '\x2f\x52\x0c\x79\x96\x03\x6e\x79',
+    collisions = {'buf': b'\x2f\x52\x0c\x79\x96\x03\x6e\x79',
                   'val': 3409801584220270201}
 
     buf = port_no['buf'] \
@@ -2438,19 +2380,19 @@ class TestOFPPortStats(unittest.TestCase):
 
 
 class TestOFPQueueStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueStats
+    """ Test case for ofproto_v1_0_parser.OFPQueueStats
     """
 
     # OFP_QUEUE_STATS_PACK_STR
     # '!H2xIQQQ...port_no, queue_id, tx_bytes, tx_packets, tx_errors
-    port_no = {'buf': '\xe7\x6b', 'val': 59243}
-    zfill = '\x00' * 2
-    queue_id = {'buf': '\x2a\xa8\x7f\x32', 'val': 715685682}
-    tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+    port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+    zfill = b'\x00' * 2
+    queue_id = {'buf': b'\x2a\xa8\x7f\x32', 'val': 715685682}
+    tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                 'val': 8638420181865882538}
-    tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+    tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                   'val': 2856480458895760962}
-    tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+    tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                  'val': 6283093430376743019}
 
     c = OFPQueueStats(port_no['val'],
@@ -2490,7 +2432,7 @@ class TestOFPQueueStats(unittest.TestCase):
 
 
 class TestOFPVendorStats(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendorStats
+    """ Test case for ofproto_v1_0_parser.OFPVendorStats
     """
 
     specific_data = 'specific_data'
@@ -2514,14 +2456,14 @@ class TestOFPVendorStats(unittest.TestCase):
 
 
 class TestOFPQueuePropNone(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueuePropNone
+    """ Test case for ofproto_v1_0_parser.OFPQueuePropNone
     """
 
     # OFP_QUEUE_PROP_HEADER_PACK_STR
     # '!HH4x'...property_, len_
-    property = {'buf': '\x00\x00', 'val': ofproto_v1_0.OFPQT_NONE}
-    len = {'buf': '\x00\x08', 'val': ofproto_v1_0.OFP_QUEUE_PROP_HEADER_SIZE}
-    zfill = '\x00' * 4
+    property = {'buf': b'\x00\x00', 'val': ofproto.OFPQT_NONE}
+    len = {'buf': b'\x00\x08', 'val': ofproto.OFP_QUEUE_PROP_HEADER_SIZE}
+    zfill = b'\x00' * 4
 
     c = OFPQueuePropNone()
 
@@ -2549,31 +2491,16 @@ class TestOFPQueuePropNone(unittest.TestCase):
 
         ok_(self.c.parser(buf, 0))
 
-    def test_str(self):
-        list_ = ('property', 'len')
-        check = {}
-        str_ = str(self.c)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(check['property'], str(self.property['val']))
-        eq_(check['len'], str(self.len['val']))
-
 
 class TestOFPQueuePropMinRate(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueuePropMinRate
+    """ Test case for ofproto_v1_0_parser.OFPQueuePropMinRate
     """
 
     # OFP_QUEUE_PROP_MIN_RATE_PACK_STR
     # '!H6x'...rate
-    rate = {'buf': '\x00\x01', 'val': ofproto_v1_0.OFPQT_MIN_RATE}
-    len = {'buf': '\x00\x10', 'val': ofproto_v1_0.OFP_QUEUE_PROP_MIN_RATE_SIZE}
-    zfill = '\x00' * 6
+    rate = {'buf': b'\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
+    len = {'buf': b'\x00\x10', 'val': ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE}
+    zfill = b'\x00' * 6
 
     buf = rate['buf'] \
         + zfill
@@ -2600,31 +2527,17 @@ class TestOFPQueuePropMinRate(unittest.TestCase):
         res = self.c.parser(self.buf, 0)
         eq_(self.rate['val'], res.rate)
 
-    def test_str(self):
-        list_ = ('rate',)
-        check = {}
-        str_ = str(self.c)
-        str_ = str_.rsplit()
-        i = 0
-
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(check['rate'], str(self.rate['val']))
-
 
 class TestOFPPacketQueue(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPacketQueue
+    """ Test case for ofproto_v1_0_parser.OFPPacketQueue
     """
 
     # OFP_PACKET_QUEUE_PQCK_STR
     # '!IH2x'...queue_id, len_, zfill
-    queue_id = {'buf': '\x4d\x4b\x3a\xd1', 'val': 1296775889}
-    len_ = {'buf': '\x00\x08',
-            'val': ofproto_v1_0.OFP_QUEUE_PROP_HEADER_SIZE}
-    zfill = '\x00' * 2
+    queue_id = {'buf': b'\x4d\x4b\x3a\xd1', 'val': 1296775889}
+    len_ = {'buf': b'\x00\x08',
+            'val': ofproto.OFP_QUEUE_PROP_HEADER_SIZE}
+    zfill = b'\x00' * 2
 
     buf = queue_id['buf'] \
         + len_['buf'] \
@@ -2651,14 +2564,14 @@ class TestOFPPacketQueue(unittest.TestCase):
     def test_parser_append_prop(self):
         # OFP_QUEUE_PROP_HEADER_PACK_STR + OFP_QUEUE_PROP_MIN_RATE_PACK_STR
         # '!HH4xH6x'...type, len, zfill, rate, zfill
-        len_ = {'buf': '\x00\x10',
-                'val': ofproto_v1_0.OFP_QUEUE_PROP_MIN_RATE_SIZE}
-        a_type = {'buf': '\x00\x01', 'val': ofproto_v1_0.OFPQT_MIN_RATE}
-        a_len = {'buf': '\x00\x10',
-                 'val': ofproto_v1_0.OFP_QUEUE_PROP_MIN_RATE_SIZE}
-        a_zfill0 = '\x00' * 4
-        a_rate = {'buf': '\x00\x01', 'val': ofproto_v1_0.OFPQT_MIN_RATE}
-        a_zfill1 = '\x00' * 6
+        len_ = {'buf': b'\x00\x10',
+                'val': ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE}
+        a_type = {'buf': b'\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
+        a_len = {'buf': b'\x00\x10',
+                 'val': ofproto.OFP_QUEUE_PROP_MIN_RATE_SIZE}
+        a_zfill0 = b'\x00' * 4
+        a_rate = {'buf': b'\x00\x01', 'val': ofproto.OFPQT_MIN_RATE}
+        a_zfill1 = b'\x00' * 6
 
         buf = self.queue_id['buf'] \
             + len_['buf'] \
@@ -2682,7 +2595,7 @@ class TestOFPPacketQueue(unittest.TestCase):
 
 
 class TestOFPHello(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPHello
+    """ Test case for ofproto_v1_0_parser.OFPHello
     """
 
     def setUp(self):
@@ -2695,52 +2608,40 @@ class TestOFPHello(unittest.TestCase):
         pass
 
     def test_parser(self):
+        version = ofproto.OFP_VERSION
+        msg_type = ofproto.OFPT_HELLO
+        msg_len = ofproto.OFP_HEADER_SIZE
         xid = 2183948390
-        res = OFPHello.parser(object,
-                              ofproto_v1_0.OFP_VERSION,
-                              ofproto_v1_0.OFPT_HELLO,
-                              ofproto_v1_0.OFP_HEADER_SIZE,
-                              xid,
-                              str().zfill(ofproto_v1_0.OFP_HEADER_SIZE))
+        data = b'\x00\x01\x02\x03'
 
-        eq_(ofproto_v1_0.OFP_VERSION, res.version)
-        eq_(ofproto_v1_0.OFPT_HELLO, res.msg_type)
-        eq_(ofproto_v1_0.OFP_HEADER_SIZE, res.msg_len)
+        fmt = ofproto.OFP_HEADER_PACK_STR
+        buf = struct.pack(fmt, version, msg_type, msg_len, xid) \
+            + data
+
+        res = OFPHello.parser(object, version, msg_type, msg_len, xid,
+                              bytearray(buf))
+
+        eq_(version, res.version)
+        eq_(msg_type, res.msg_type)
+        eq_(msg_len, res.msg_len)
         eq_(xid, res.xid)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(ofproto_v1_0.OFP_VERSION).find(check['version:']), 0)
-        eq_(hex(ofproto_v1_0.OFPT_HELLO).find(check['msg_type']), 0)
-        eq_(hex(xid).find(check['xid']), 0)
+        eq_(six.binary_type(buf), six.binary_type(res.buf))
 
     def test_serialize(self):
 
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
         c = OFPHello(Datapath)
         c.serialize()
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_HELLO, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_HELLO, c.msg_type)
         eq_(0, c.xid)
 
 
 class TestOFPErrorMsg(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPErrorMsg
+    """ Test case for ofproto_v1_0_parser.OFPErrorMsg
     """
 
     def setUp(self):
@@ -2753,14 +2654,14 @@ class TestOFPErrorMsg(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x01', 'val': ofproto_v1_0.OFPT_ERROR}
-        msg_len = {'buf': '\x00\x0c',
-                   'val': ofproto_v1_0.OFP_ERROR_MSG_SIZE}
-        xid = {'buf': '\x87\x8b\x26\x7c', 'val': 2274043516}
-        type = {'buf': '\xab\x3e', 'val': 43838}
-        code = {'buf': '\x5d\x3c', 'val': 23868}
-        data = 'Error Message.'
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x01', 'val': ofproto.OFPT_ERROR}
+        msg_len = {'buf': b'\x00\x0c',
+                   'val': ofproto.OFP_ERROR_MSG_SIZE}
+        xid = {'buf': b'\x87\x8b\x26\x7c', 'val': 2274043516}
+        type = {'buf': b'\xab\x3e', 'val': 43838}
+        code = {'buf': b'\x5d\x3c', 'val': 23868}
+        data = b'Error Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -2785,30 +2686,14 @@ class TestOFPErrorMsg(unittest.TestCase):
         eq_(code['val'], res.code)
         eq_(data, res.data)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
         type = 1306
         code = 13774
-        data = 'Error Message.'
+        data = b'Error Message.'
 
         c = OFPErrorMsg(Datapath)
         c.type = type
@@ -2817,18 +2702,18 @@ class TestOFPErrorMsg(unittest.TestCase):
 
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_ERROR, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_ERROR, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_ERROR_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_ERROR_MSG_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_ERROR, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_ERROR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
         eq_(type, res[4])
@@ -2837,7 +2722,7 @@ class TestOFPErrorMsg(unittest.TestCase):
 
 
 class TestOFPEchoRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPEchoRequest
+    """ Test case for ofproto_v1_0_parser.OFPEchoRequest
     """
 
     def setUp(self):
@@ -2850,12 +2735,12 @@ class TestOFPEchoRequest(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x02', 'val': ofproto_v1_0.OFPT_ECHO_REQUEST}
-        msg_len = {'buf': '\x00\x08',
-                   'val': ofproto_v1_0.OFP_HEADER_SIZE}
-        xid = {'buf': '\x84\x47\xef\x3f', 'val': 2219306815}
-        data = 'Request Message.'
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x02', 'val': ofproto.OFPT_ECHO_REQUEST}
+        msg_len = {'buf': b'\x00\x08',
+                   'val': ofproto.OFP_HEADER_SIZE}
+        xid = {'buf': b'\x84\x47\xef\x3f', 'val': 2219306815}
+        data = b'Request Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -2876,54 +2761,36 @@ class TestOFPEchoRequest(unittest.TestCase):
         eq_(xid['val'], res.xid)
         eq_(data, res.data)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        data = 'Request Message.'
+        data = b'Request Message.'
 
         c = OFPEchoRequest(Datapath)
         c.data = data
 
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_ECHO_REQUEST, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_ECHO_REQUEST, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_ECHO_REQUEST, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_ECHO_REQUEST, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
         eq_(data, res[4])
 
 
 class TestOFPEchoReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPEchoReply
+    """ Test case for ofproto_v1_0_parser.OFPEchoReply
     """
 
     def setUp(self):
@@ -2936,12 +2803,12 @@ class TestOFPEchoReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x03', 'val': ofproto_v1_0.OFPT_ECHO_REPLY}
-        msg_len = {'buf': '\x00\x08',
-                   'val': ofproto_v1_0.OFP_HEADER_SIZE}
-        xid = {'buf': '\x6e\x21\x3e\x62', 'val': 1847672418}
-        data = 'Reply Message.'
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x03', 'val': ofproto.OFPT_ECHO_REPLY}
+        msg_len = {'buf': b'\x00\x08',
+                   'val': ofproto.OFP_HEADER_SIZE}
+        xid = {'buf': b'\x6e\x21\x3e\x62', 'val': 1847672418}
+        data = b'Reply Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -2962,54 +2829,36 @@ class TestOFPEchoReply(unittest.TestCase):
         eq_(xid['val'], res.xid)
         eq_(data, res.data)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        data = 'Reply Message.'
+        data = b'Reply Message.'
 
         c = OFPEchoReply(Datapath)
         c.data = data
 
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_ECHO_REPLY, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_ECHO_REPLY, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_ECHO_REPLY, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_ECHO_REPLY, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
         eq_(data, res[4])
 
 
 class TestOFPVendor(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendor
+    """ Test case for ofproto_v1_0_parser.OFPVendor
     """
 
     def setUp(self):
@@ -3022,13 +2871,13 @@ class TestOFPVendor(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x04', 'val': ofproto_v1_0.OFPT_VENDOR}
-        msg_len = {'buf': '\x00\x0c',
-                   'val': ofproto_v1_0.OFP_VENDOR_HEADER_SIZE}
-        xid = {'buf': '\x05\x45\xdf\x18', 'val': 88465176}
-        vendor = {'buf': '\x53\xea\x25\x3e', 'val': 1407853886}
-        data = 'Vendor Message.'
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x04', 'val': ofproto.OFPT_VENDOR}
+        msg_len = {'buf': b'\x00\x0c',
+                   'val': ofproto.OFP_VENDOR_HEADER_SIZE}
+        xid = {'buf': b'\x05\x45\xdf\x18', 'val': 88465176}
+        vendor = {'buf': b'\x53\xea\x25\x3e', 'val': 1407853886}
+        data = b'Vendor Message.'
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3051,31 +2900,13 @@ class TestOFPVendor(unittest.TestCase):
         eq_(vendor['val'], res.vendor)
         eq_(data, res.data)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        # comparison fails in some environment
-        #   such as hex() returns string with suffix 'L'
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        vendor = {'buf': '\x38\x4b\xf9\x6c', 'val': 944503148}
-        data = 'Reply Message.'
+        vendor = {'buf': b'\x38\x4b\xf9\x6c', 'val': 944503148}
+        data = b'Reply Message.'
 
         c = OFPVendor(Datapath)
         c.vendor = vendor['val']
@@ -3083,28 +2914,28 @@ class TestOFPVendor(unittest.TestCase):
 
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_VENDOR, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
         eq_(vendor['val'], c.vendor)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_VENDOR_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_VENDOR_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
         eq_(vendor['val'], res[4])
         eq_(data, res[5])
 
 
-#class TestNXTRequest(unittest.TestCase):
+# class TestNXTRequest(unittest.TestCase):
 class TestNiciraHeader(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NiciraHeader
+    """ Test case for ofproto_v1_0_parser.NiciraHeader
     """
 
     def setUp(self):
@@ -3114,7 +2945,7 @@ class TestNiciraHeader(unittest.TestCase):
         pass
 
     def test_init(self):
-        subtype = ofproto_v1_0.NXT_FLOW_MOD_TABLE_ID
+        subtype = ofproto.NXT_FLOW_MOD_TABLE_ID
 
         c = NiciraHeader(object, subtype)
         eq_(subtype, c.subtype)
@@ -3125,39 +2956,39 @@ class TestNiciraHeader(unittest.TestCase):
 
     def test_serialize(self):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        data = 'Reply Message.'
-        subtype = ofproto_v1_0.NXT_FLOW_MOD_TABLE_ID
+        data = b'Reply Message.'
+        subtype = ofproto.NXT_FLOW_MOD_TABLE_ID
 
         c = NiciraHeader(Datapath, subtype)
         c.data = data
 
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_VENDOR, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto_v1_0.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NICIRA_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto_v1_0.NX_VENDOR_ID, res[4])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
         eq_(subtype, res[5])
         eq_(data, res[6])
 
 
 class TestNXTSetFlowFormat(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTSetFlowFormat
+    """ Test case for ofproto_v1_0_parser.NXTSetFlowFormat
     """
 
     def setUp(self):
@@ -3167,7 +2998,7 @@ class TestNXTSetFlowFormat(unittest.TestCase):
         pass
 
     def test_init(self):
-        flow_format = {'buf': '\xdc\x6b\xf5\x24', 'val': 3698062628}
+        flow_format = {'buf': b'\xdc\x6b\xf5\x24', 'val': 3698062628}
 
         c = NXTSetFlowFormat(object, flow_format['val'])
         eq_(flow_format['val'], c.format)
@@ -3178,59 +3009,59 @@ class TestNXTSetFlowFormat(unittest.TestCase):
 
     def test_serialize(self):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
-        flow_format = {'buf': '\x5a\x4e\x59\xad', 'val': 1515084205}
+        flow_format = {'buf': b'\x5a\x4e\x59\xad', 'val': 1515084205}
 
         c = NXTSetFlowFormat(Datapath, flow_format['val'])
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_VENDOR, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto_v1_0.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NICIRA_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NX_SET_FLOW_FORMAT_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NX_SET_FLOW_FORMAT_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto_v1_0.NX_VENDOR_ID, res[4])
-        eq_(ofproto_v1_0.NXT_SET_FLOW_FORMAT, res[5])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
+        eq_(ofproto.NXT_SET_FLOW_FORMAT, res[5])
         eq_(flow_format['val'], res[6])
 
 
 class TestNXTFlowMod(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTFlowMod
+    """ Test case for ofproto_v1_0_parser.NXTFlowMod
     """
 
     # NX_FLOW_MOD_PACK_STR
     # '!Q4HI3H6x'...cokkie, command, idle_timeout, head_timeout,
     #               priority, buffer_id, out_port, flags, rule, zfill
-    cookie = {'buf': '\x04\x56\x27\xad\xbd\x43\xd6\x83',
+    cookie = {'buf': b'\x04\x56\x27\xad\xbd\x43\xd6\x83',
               'val': 312480851306993283}
-    command = {'buf': '\x61\xaa', 'val': 25002}
-    idle_timeout = {'buf': '\x4e\xff', 'val': 20223}
-    hard_timeout = {'buf': '\x80\x16', 'val': 32790}
-    priority = {'buf': '\x70\x5f', 'val': 28767}
-    buffer_id = {'buf': '\x7b\x97\x3a\x09', 'val': 2073508361}
-    out_port = {'buf': '\x11\x7d', 'val': 4477}
-    flags = {'buf': '\x5c\xb9', 'val': 23737}
+    command = {'buf': b'\x61\xaa', 'val': 25002}
+    idle_timeout = {'buf': b'\x4e\xff', 'val': 20223}
+    hard_timeout = {'buf': b'\x80\x16', 'val': 32790}
+    priority = {'buf': b'\x70\x5f', 'val': 28767}
+    buffer_id = {'buf': b'\x7b\x97\x3a\x09', 'val': 2073508361}
+    out_port = {'buf': b'\x11\x7d', 'val': 4477}
+    flags = {'buf': b'\x5c\xb9', 'val': 23737}
     rule = nx_match.ClsRule()
-    zfill = '\x00' * 6
+    zfill = b'\x00' * 6
 
-    port = {'buf': '\x2a\xe0', 'val': 10976}
+    port = {'buf': b'\x2a\xe0', 'val': 10976}
     actions = [OFPActionOutput(port['val'])]
 
     def _get_obj(self, append_action=False):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
         actions = None
@@ -3274,8 +3105,8 @@ class TestNXTFlowMod(unittest.TestCase):
         c = self._get_obj(True)
 
         action = c.actions[0]
-        eq_(ofproto_v1_0.OFPAT_OUTPUT, action.type)
-        eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, action.len)
+        eq_(ofproto.OFPAT_OUTPUT, action.type)
+        eq_(ofproto.OFP_ACTION_OUTPUT_SIZE, action.len)
         eq_(self.port['val'], action.port)
 
     def test_parser(self):
@@ -3286,23 +3117,23 @@ class TestNXTFlowMod(unittest.TestCase):
         c = self._get_obj()
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_VENDOR, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto_v1_0.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NICIRA_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NX_FLOW_MOD_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NX_FLOW_MOD_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto_v1_0.NX_VENDOR_ID, res[4])
-        eq_(ofproto_v1_0.NXT_FLOW_MOD, res[5])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
+        eq_(ofproto.NXT_FLOW_MOD, res[5])
         eq_(self.cookie['val'], res[6])
         eq_(self.command['val'], res[7])
         eq_(self.idle_timeout['val'], res[8])
@@ -3316,24 +3147,24 @@ class TestNXTFlowMod(unittest.TestCase):
         c = self._get_obj(True)
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_VENDOR, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_VENDOR, c.msg_type)
         eq_(0, c.xid)
-        eq_(ofproto_v1_0.NX_VENDOR_ID, c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, c.vendor)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NICIRA_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NX_FLOW_MOD_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NX_FLOW_MOD_PACK_STR.replace('!', '') \
+            + ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        res = struct.unpack(fmt, six.binary_type(c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto_v1_0.NX_VENDOR_ID, res[4])
-        eq_(ofproto_v1_0.NXT_FLOW_MOD, res[5])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
+        eq_(ofproto.NXT_FLOW_MOD, res[5])
         eq_(self.cookie['val'], res[6])
         eq_(self.command['val'], res[7])
         eq_(self.idle_timeout['val'], res[8])
@@ -3345,22 +3176,22 @@ class TestNXTFlowMod(unittest.TestCase):
 
         # action
         eq_(0, res[14])
-        eq_(ofproto_v1_0.OFPAT_OUTPUT, res[15])
-        eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, res[16])
+        eq_(ofproto.OFPAT_OUTPUT, res[15])
+        eq_(ofproto.OFP_ACTION_OUTPUT_SIZE, res[16])
         eq_(self.port['val'], res[17])
-        eq_(0, res[18])
+        eq_(0xffe5, res[18])
 
 
 class TestNXTRoleRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTRoleRequest
+    """ Test case for ofproto_v1_0_parser.NXTRoleRequest
     """
 
     # NX_ROLE_PACK_STR
     # '!I'...role
-    role = {'buf': '\x62\x81\x27\x61', 'val': 1652631393}
+    role = {'buf': b'\x62\x81\x27\x61', 'val': 1652631393}
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = NXTRoleRequest(Datapath, role['val'])
@@ -3381,38 +3212,38 @@ class TestNXTRoleRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_VENDOR, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_VENDOR, self.c.msg_type)
         eq_(0, self.c.xid)
-        eq_(ofproto_v1_0.NX_VENDOR_ID, self.c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, self.c.vendor)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NICIRA_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NX_ROLE_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NX_ROLE_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto_v1_0.NX_VENDOR_ID, res[4])
-        eq_(ofproto_v1_0.NXT_ROLE_REQUEST, res[5])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
+        eq_(ofproto.NXT_ROLE_REQUEST, res[5])
         eq_(self.role['val'], res[6])
 
 
 class TestNXTFlowModTableId(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.NXTFlowModTableId
+    """ Test case for ofproto_v1_0_parser.NXTFlowModTableId
     """
 
     # NX_FLOW_MOD_TABLE_ID_PACK_STR
     # '!B7x'...set_, zfill
-    set_ = {'buf': '\x71', 'val': 113}
-    zfill = '\x00' * 7
+    set_ = {'buf': b'\x71', 'val': 113}
+    zfill = b'\x00' * 7
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = NXTFlowModTableId(Datapath, set_['val'])
@@ -3433,32 +3264,32 @@ class TestNXTFlowModTableId(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_VENDOR, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_VENDOR, self.c.msg_type)
         eq_(0, self.c.xid)
-        eq_(ofproto_v1_0.NX_VENDOR_ID, self.c.vendor)
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, self.c.vendor)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NICIRA_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.NX_FLOW_MOD_TABLE_ID_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NICIRA_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.NX_FLOW_MOD_TABLE_ID_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_VENDOR, res[1])
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_VENDOR, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
-        eq_(ofproto_v1_0.NX_VENDOR_ID, res[4])
-        eq_(ofproto_v1_0.NXT_FLOW_MOD_TABLE_ID, res[5])
+        eq_(ofproto_common.NX_EXPERIMENTER_ID, res[4])
+        eq_(ofproto.NXT_FLOW_MOD_TABLE_ID, res[5])
         eq_(self.set_['val'], res[6])
 
 
 class TestOFPSwitchFeatures(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPSwitchFeatures
+    """ Test case for ofproto_v1_0_parser.OFPSwitchFeatures
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPSwitchFeatures(Datapath)
@@ -3473,36 +3304,36 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x06', 'val': ofproto_v1_0.OFPT_FEATURES_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_SWITCH_FEATURES_SIZE \
-            + ofproto_v1_0.OFP_PHY_PORT_SIZE
-        msg_len = {'buf': '\x00\x4c', 'val': msg_len_val}
-        xid = {'buf': '\xcc\x0a\x41\xd4', 'val': 3423224276}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x06', 'val': ofproto.OFPT_FEATURES_REPLY}
+        msg_len_val = ofproto.OFP_SWITCH_FEATURES_SIZE \
+            + ofproto.OFP_PHY_PORT_SIZE
+        msg_len = {'buf': b'\x00\x4c', 'val': msg_len_val}
+        xid = {'buf': b'\xcc\x0a\x41\xd4', 'val': 3423224276}
 
         # OFP_SWITCH_FEATURES_PACK_STR
         # '!QIB3xII'...datapath_id, n_buffers, n_tables,
         #              zfill, capabilities, actions
-        datapath_id = {'buf': '\x11\xa3\x72\x63\x61\xde\x39\x81',
+        datapath_id = {'buf': b'\x11\xa3\x72\x63\x61\xde\x39\x81',
                        'val': 1270985291017894273}
-        n_buffers = {'buf': '\x80\x14\xd7\xf6', 'val': 2148849654}
-        n_tables = {'buf': '\xe4', 'val': 228}
-        zfill = '\x00' * 3
-        capabilities = {'buf': '\x69\x4f\xe4\xc2', 'val': 1766843586}
-        actions = {'buf': '\x78\x06\xd9\x0c', 'val': 2013714700}
+        n_buffers = {'buf': b'\x80\x14\xd7\xf6', 'val': 2148849654}
+        n_tables = {'buf': b'\xe4', 'val': 228}
+        zfill = b'\x00' * 3
+        capabilities = {'buf': b'\x69\x4f\xe4\xc2', 'val': 1766843586}
+        actions = {'buf': b'\x78\x06\xd9\x0c', 'val': 2013714700}
 
         # OFP_PHY_PORT_PACK_STR
         # '!H6s16sIIIIII'... port_no, hw_addr, name, config, state
         #                    curr, advertised, supported, peer
-        port_no = {'buf': '\xe7\x6b', 'val': 59243}
-        hw_addr = '\x3c\xd1\x2b\x8d\x3f\xd6'
-        name = 'name'.ljust(16)
-        config = {'buf': '\x84\xb6\x8c\x53', 'val': 2226555987}
-        state = {'buf': '\x64\x07\xfb\xc9', 'val': 1678244809}
-        curr = {'buf': '\xa9\xe8\x0a\x2b', 'val': 2850556459}
-        advertised = {'buf': '\x78\xb9\x7b\x72', 'val': 2025421682}
-        supported = {'buf': '\x7e\x65\x68\xad', 'val': 2120575149}
-        peer = {'buf': '\xa4\x5b\x8b\xed', 'val': 2757463021}
+        port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+        hw_addr = '3c:d1:2b:8d:3f:d6'
+        name = b'name'.ljust(16)
+        config = {'buf': b'\x84\xb6\x8c\x53', 'val': 2226555987}
+        state = {'buf': b'\x64\x07\xfb\xc9', 'val': 1678244809}
+        curr = {'buf': b'\xa9\xe8\x0a\x2b', 'val': 2850556459}
+        advertised = {'buf': b'\x78\xb9\x7b\x72', 'val': 2025421682}
+        supported = {'buf': b'\x7e\x65\x68\xad', 'val': 2120575149}
+        peer = {'buf': b'\xa4\x5b\x8b\xed', 'val': 2757463021}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3515,7 +3346,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
             + capabilities['buf'] \
             + actions['buf'] \
             + port_no['buf'] \
-            + hw_addr \
+            + addrconv.mac.text_to_bin(hw_addr) \
             + name \
             + config['buf'] \
             + state['buf'] \
@@ -3544,7 +3375,7 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         # port
         port = res.ports[port_no['val']]
         eq_(port_no['val'], port.port_no)
-        eq_(hw_addr, port.hw_addr)
+        eq_(hw_addr, hw_addr)
         eq_(name, port.name)
         eq_(config['val'], port.config)
         eq_(state['val'], port.state)
@@ -3553,34 +3384,17 @@ class TestOFPSwitchFeatures(unittest.TestCase):
         eq_(supported['val'], port.supported)
         eq_(peer['val'], port.peer)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid', 'port')
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-        eq_(check['port'].find('OFPPhyPort'), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPPortStatus(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStatus
+    """ Test case for ofproto_v1_0_parser.OFPPortStatus
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPPortStatus(Datapath)
@@ -3595,27 +3409,27 @@ class TestOFPPortStatus(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x0c', 'val': ofproto_v1_0.OFPT_PORT_STATUS}
-        msg_len = {'buf': '\x00\x40',
-                   'val': ofproto_v1_0.OFP_PORT_STATUS_SIZE}
-        xid = {'buf': '\x06\x27\x8b\x7b', 'val': 103254907}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0c', 'val': ofproto.OFPT_PORT_STATUS}
+        msg_len = {'buf': b'\x00\x40',
+                   'val': ofproto.OFP_PORT_STATUS_SIZE}
+        xid = {'buf': b'\x06\x27\x8b\x7b', 'val': 103254907}
 
         # OFP_PORT_STATUS_PACK_STR
         # '!B7xH6s16sIIIIII'...reason, zfill, port_no, hw_addr,
         #                      name, config, state, curr,
         #                      advertised, supported, peer
-        reason = {'buf': '\x71', 'val': 113}
-        zfill = '\x00' * 7
-        port_no = {'buf': '\x48\xd8', 'val': 18648}
-        hw_addr = '\x41\xf7\xa3\x52\x8f\x6b'
-        name = 'name'.ljust(16)
-        config = {'buf': '\xae\x73\x90\xec', 'val': 2926809324}
-        state = {'buf': '\x41\x37\x32\x1d', 'val': 1094136349}
-        curr = {'buf': '\xa9\x47\x13\x2c', 'val': 2840007468}
-        advertised = {'buf': '\xce\x6b\x4a\x87', 'val': 3463137927}
-        supported = {'buf': '\xb8\x06\x65\xa1', 'val': 3087426977}
-        peer = {'buf': '\x6a\x11\x52\x39', 'val': 1779520057}
+        reason = {'buf': b'\x71', 'val': 113}
+        zfill = b'\x00' * 7
+        port_no = {'buf': b'\x48\xd8', 'val': 18648}
+        hw_addr = '41:f7:a3:52:8f:6b'
+        name = b'name'.ljust(16)
+        config = {'buf': b'\xae\x73\x90\xec', 'val': 2926809324}
+        state = {'buf': b'\x41\x37\x32\x1d', 'val': 1094136349}
+        curr = {'buf': b'\xa9\x47\x13\x2c', 'val': 2840007468}
+        advertised = {'buf': b'\xce\x6b\x4a\x87', 'val': 3463137927}
+        supported = {'buf': b'\xb8\x06\x65\xa1', 'val': 3087426977}
+        peer = {'buf': b'\x6a\x11\x52\x39', 'val': 1779520057}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3624,7 +3438,7 @@ class TestOFPPortStatus(unittest.TestCase):
             + reason['buf'] \
             + zfill \
             + port_no['buf'] \
-            + hw_addr \
+            + addrconv.mac.text_to_bin(hw_addr) \
             + name \
             + config['buf'] \
             + state['buf'] \
@@ -3658,33 +3472,17 @@ class TestOFPPortStatus(unittest.TestCase):
         eq_(supported['val'], desc.supported)
         eq_(peer['val'], desc.peer)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPPacketIn(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPacketIn
+    """ Test case for ofproto_v1_0_parser.OFPPacketIn
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPPacketIn(Datapath)
@@ -3699,24 +3497,24 @@ class TestOFPPacketIn(unittest.TestCase):
         pass
 
     def _test_parser(self, padding=False):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x0a', 'val': ofproto_v1_0.OFPT_PACKET_IN}
-        msg_len = {'buf': '\x00\x14',
-                   'val': ofproto_v1_0.OFP_PACKET_IN_SIZE}
-        xid = {'buf': '\xd0\x23\x8c\x34', 'val': 3491990580}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a', 'val': ofproto.OFPT_PACKET_IN}
+        msg_len = {'buf': b'\x00\x14',
+                   'val': ofproto.OFP_PACKET_IN_SIZE}
+        xid = {'buf': b'\xd0\x23\x8c\x34', 'val': 3491990580}
 
         # OFP_PACKET_IN_PACK_STR
         # '!IHHBx2x'...buffer_id, total_len,
         #              in_port, reason, zfill, data
-        buffer_id = {'buf': '\xae\x73\x90\xec', 'val': 2926809324}
-        total_len = {'buf': '\x00\x10', 'val': 16}
-        in_port = {'buf': '\x08\x42', 'val': 2114}
-        reason = {'buf': '\x43', 'val': 67}
-        zfill = '\x00' * 1
+        buffer_id = {'buf': b'\xae\x73\x90\xec', 'val': 2926809324}
+        total_len = {'buf': b'\x00\x10', 'val': 16}
+        in_port = {'buf': b'\x08\x42', 'val': 2114}
+        reason = {'buf': b'\x43', 'val': 67}
+        zfill = b'\x00' * 1
         if padding:
-            data = 'PACKET IN'.ljust(20)
+            data = b'PACKET IN'.ljust(20)
         else:
-            data = 'PACKET IN'.ljust(16)
+            data = b'PACKET IN'.ljust(16)
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3746,27 +3544,6 @@ class TestOFPPacketIn(unittest.TestCase):
         eq_(reason['val'], res.reason)
         eq_(data[0:16], res.data)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',
-                 'buffer_id', 'total_len', 'in_port', 'reason',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-        eq_(str(buffer_id['val']), check['buffer_id'])
-        eq_(str(total_len['val']), check['total_len'])
-        eq_(str(in_port['val']), check['in_port'])
-        eq_(str(reason['val']), check['reason'])
-
         return True
 
     def test_parser(self):
@@ -3781,11 +3558,11 @@ class TestOFPPacketIn(unittest.TestCase):
 
 
 class TestOFPGetConfigReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPGetConfigReply
+    """ Test case for ofproto_v1_0_parser.OFPGetConfigReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPGetConfigReply(Datapath)
@@ -3800,16 +3577,16 @@ class TestOFPGetConfigReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x0a', 'val': ofproto_v1_0.OFPT_GET_CONFIG_REPLY}
-        msg_len = {'buf': '\x00\x14',
-                   'val': ofproto_v1_0.OFP_SWITCH_CONFIG_SIZE}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a', 'val': ofproto.OFPT_GET_CONFIG_REPLY}
+        msg_len = {'buf': b'\x00\x14',
+                   'val': ofproto.OFP_SWITCH_CONFIG_SIZE}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         # OFP_SWITCH_CONFIG_PACK_STR
         # '!HH'...flags, miss_send_len
-        flags = {'buf': '\xa0\xe2', 'val': 41186}
-        miss_send_len = {'buf': '\x36\x0e', 'val': 13838}
+        flags = {'buf': b'\xa0\xe2', 'val': 41186}
+        miss_send_len = {'buf': b'\x36\x0e', 'val': 13838}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3832,33 +3609,17 @@ class TestOFPGetConfigReply(unittest.TestCase):
         eq_(flags['val'], res.flags)
         eq_(miss_send_len['val'], res.miss_send_len)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPBarrierReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPBarrierReply
+    """ Test case for ofproto_v1_0_parser.OFPBarrierReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPBarrierReply(Datapath)
@@ -3873,11 +3634,11 @@ class TestOFPBarrierReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x13', 'val': ofproto_v1_0.OFPT_BARRIER_REPLY}
-        msg_len = {'buf': '\x00\x08',
-                   'val': ofproto_v1_0.OFP_HEADER_SIZE}
-        xid = {'buf': '\x66\xc4\xc3\xac', 'val': 1724171180}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x13', 'val': ofproto.OFPT_BARRIER_REPLY}
+        msg_len = {'buf': b'\x00\x08',
+                   'val': ofproto.OFP_HEADER_SIZE}
+        xid = {'buf': b'\x66\xc4\xc3\xac', 'val': 1724171180}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3896,33 +3657,17 @@ class TestOFPBarrierReply(unittest.TestCase):
         eq_(msg_len['val'], res.msg_len)
         eq_(xid['val'], res.xid)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPFlowRemoved(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowRemoved
+    """ Test case for ofproto_v1_0_parser.OFPFlowRemoved
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPFlowRemoved(Datapath)
@@ -3937,11 +3682,11 @@ class TestOFPFlowRemoved(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x0a', 'val': ofproto_v1_0.OFPT_FLOW_REMOVED}
-        msg_len = {'buf': '\x00\x14',
-                   'val': ofproto_v1_0.OFP_FLOW_REMOVED_SIZE}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a', 'val': ofproto.OFPT_FLOW_REMOVED}
+        msg_len = {'buf': b'\x00\x14',
+                   'val': ofproto.OFP_FLOW_REMOVED_SIZE}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -3952,21 +3697,21 @@ class TestOFPFlowRemoved(unittest.TestCase):
         # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
         #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
         #                         nw_src, nw_dst, tp_src, tp_dst
-        wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-        in_port = {'buf': '\x37\x8b', 'val': 14219}
-        dl_src = '\x7f\x85\xc4\x70\x12\xda'
-        dl_dst = '\x0a\x51\x17\x58\xb0\xbb'
-        dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-        dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-        zfill0 = '\x00'
-        dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-        nw_tos = {'buf': '\xde', 'val': 222}
-        nw_proto = {'buf': '\xe5', 'val': 229}
-        zfil11 = '\x00' * 2
-        nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-        nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-        tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-        tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+        wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+        in_port = {'buf': b'\x37\x8b', 'val': 14219}
+        dl_src = b'\x7f\x85\xc4\x70\x12\xda'
+        dl_dst = b'\x0a\x51\x17\x58\xb0\xbb'
+        dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+        dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+        zfill0 = b'\x00'
+        dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+        nw_tos = {'buf': b'\xde', 'val': 222}
+        nw_proto = {'buf': b'\xe5', 'val': 229}
+        zfil11 = b'\x00' * 2
+        nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
+        nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+        tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+        tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
         buf += wildcards['buf'] \
             + in_port['buf'] \
@@ -3988,18 +3733,18 @@ class TestOFPFlowRemoved(unittest.TestCase):
         # '!QHBxIIH2xQQ'...cookie, priority, reason, zfill,
         #                  duration_sec, duration_nsec, idle_timeout,
         #                  zfill, packet_count, byte_count
-        cookie = {'buf': '\x02\x79\xba\x00\xef\xab\xee\x44',
+        cookie = {'buf': b'\x02\x79\xba\x00\xef\xab\xee\x44',
                   'val': 178378173441633860}
-        priority = {'buf': '\x02\xce', 'val': 718}
-        reason = {'buf': '\xa9', 'val': 169}
-        zfill0 = '\x00' * 1
-        duration_sec = {'buf': '\x86\x24\xa3\xba', 'val': 2250548154}
-        duration_nsec = {'buf': '\x94\x94\xc2\x23', 'val': 2492776995}
-        idle_timeout = {'buf': '\xeb\x7c', 'val': 60284}
-        zfill1 = '\x00' * 2
-        packet_count = {'buf': '\x5a\x0d\xf2\x03\x8e\x0a\xbb\x8d',
+        priority = {'buf': b'\x02\xce', 'val': 718}
+        reason = {'buf': b'\xa9', 'val': 169}
+        zfill0 = b'\x00' * 1
+        duration_sec = {'buf': b'\x86\x24\xa3\xba', 'val': 2250548154}
+        duration_nsec = {'buf': b'\x94\x94\xc2\x23', 'val': 2492776995}
+        idle_timeout = {'buf': b'\xeb\x7c', 'val': 60284}
+        zfill1 = b'\x00' * 2
+        packet_count = {'buf': b'\x5a\x0d\xf2\x03\x8e\x0a\xbb\x8d',
                         'val': 6489108735192644493}
-        byte_count = {'buf': '\x65\xc8\xd3\x72\x51\xb5\xbb\x7c',
+        byte_count = {'buf': b'\x65\xc8\xd3\x72\x51\xb5\xbb\x7c',
                       'val': 7334344481123449724}
 
         buf += cookie['buf'] \
@@ -4049,45 +3794,17 @@ class TestOFPFlowRemoved(unittest.TestCase):
         eq_(tp_src['val'], match.tp_src)
         eq_(tp_dst['val'], match.tp_dst)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',
-                 'match', 'cookie', 'priority', 'reason',
-                 'duration_sec', 'duration_nsec',
-                 'idle_timeout', 'packet_count', 'byte_count')
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-        eq_(str(cookie['val']), check['cookie'])
-        eq_(str(priority['val']), check['priority'])
-        eq_(str(reason['val']), check['reason'])
-        eq_(str(duration_sec['val']), check['duration_sec'])
-        eq_(str(duration_nsec['val']), check['duration_nsec'])
-        eq_(str(idle_timeout['val']), check['idle_timeout'])
-        eq_(str(packet_count['val']), check['packet_count'])
-        eq_(str(byte_count['val']), check['byte_count'])
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPQueueGetConfigReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueGetConfigReply
+    """ Test case for ofproto_v1_0_parser.OFPQueueGetConfigReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPQueueGetConfigReply(Datapath)
@@ -4102,13 +3819,13 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x0a',
-                    'val': ofproto_v1_0.OFPT_QUEUE_GET_CONFIG_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REPLY_SIZE \
-            + ofproto_v1_0.OFP_PACKET_QUEUE_SIZE
-        msg_len = {'buf': '\x00\x14', 'val': msg_len_val}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x0a',
+                    'val': ofproto.OFPT_QUEUE_GET_CONFIG_REPLY}
+        msg_len_val = ofproto.OFP_QUEUE_GET_CONFIG_REPLY_SIZE \
+            + ofproto.OFP_PACKET_QUEUE_SIZE
+        msg_len = {'buf': b'\x00\x14', 'val': msg_len_val}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4117,18 +3834,18 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
 
         # OFP_QUEUE_GET_CONFIG_REPLY_PACK_STR
         # '!H6x'...port, zfill
-        port = {'buf': '\xfe\x66', 'val': 65126}
-        zfill = '\x00' * 6
+        port = {'buf': b'\xfe\x66', 'val': 65126}
+        zfill = b'\x00' * 6
 
         buf += port['buf'] \
             + zfill
 
         # OFP_PACKET_QUEUE_PQCK_STR
         # '!IH2x'...queue_id, len_, zfill
-        queue_id = {'buf': '\x4d\x4b\x3a\xd1', 'val': 1296775889}
-        len_ = {'buf': '\x00\x08',
-                'val': ofproto_v1_0.OFP_QUEUE_PROP_HEADER_SIZE}
-        zfill = '\x00' * 2
+        queue_id = {'buf': b'\x4d\x4b\x3a\xd1', 'val': 1296775889}
+        len_ = {'buf': b'\x00\x08',
+                'val': ofproto.OFP_QUEUE_PROP_HEADER_SIZE}
+        zfill = b'\x00' * 2
 
         buf += queue_id['buf'] \
             + len_['buf'] \
@@ -4152,34 +3869,17 @@ class TestOFPQueueGetConfigReply(unittest.TestCase):
         eq_(queue_id['val'], queue.queue_id)
         eq_(len_['val'], queue.len)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPDescStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPDescStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPDescStatsReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPDescStatsReply(Datapath)
@@ -4194,12 +3894,12 @@ class TestOFPDescStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto_v1_0.OFPT_STATS_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_STATS_MSG_SIZE \
-            + ofproto_v1_0.OFP_DESC_STATS_SIZE
-        msg_len = {'buf': '\x04\x38', 'val': msg_len_val}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
+            + ofproto.OFP_DESC_STATS_SIZE
+        msg_len = {'buf': b'\x04\x38', 'val': msg_len_val}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4208,8 +3908,8 @@ class TestOFPDescStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x00', 'val': ofproto_v1_0.OFPST_DESC}
-        flags = {'buf': '\x30\xd9', 'val': 12505}
+        type_ = {'buf': b'\x00\x00', 'val': ofproto.OFPST_DESC}
+        flags = {'buf': b'\x30\xd9', 'val': 12505}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4218,11 +3918,11 @@ class TestOFPDescStatsReply(unittest.TestCase):
         # OFP_DESC_STATS_PACK_STR
         # '!256s256s256s32s256s'...mfr_desc, hw_desc, sw_desc,
         #                          serial_num, dp_desc
-        mfr_desc = 'mfr_desc'.ljust(256)
-        hw_desc = 'hw_desc'.ljust(256)
-        sw_desc = 'sw_desc'.ljust(256)
-        serial_num = 'serial_num'.ljust(32)
-        dp_desc = 'dp_desc'.ljust(256)
+        mfr_desc = b'mfr_desc'.ljust(256)
+        hw_desc = b'hw_desc'.ljust(256)
+        sw_desc = b'sw_desc'.ljust(256)
+        serial_num = b'serial_num'.ljust(32)
+        dp_desc = b'dp_desc'.ljust(256)
 
         buf += mfr_desc \
             + hw_desc \
@@ -4252,34 +3952,17 @@ class TestOFPDescStatsReply(unittest.TestCase):
         eq_(serial_num, body.serial_num)
         eq_(dp_desc, body.dp_desc)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPFlowStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPFlowStatsReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPFlowStatsReply(Datapath)
@@ -4294,12 +3977,12 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto_v1_0.OFPT_STATS_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_STATS_MSG_SIZE \
-            + ofproto_v1_0.OFP_FLOW_STATS_SIZE
-        msg_len = {'buf': '\x00\x64', 'val': msg_len_val}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
+            + ofproto.OFP_FLOW_STATS_SIZE
+        msg_len = {'buf': b'\x00\x64', 'val': msg_len_val}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4308,8 +3991,8 @@ class TestOFPFlowStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x01', 'val': ofproto_v1_0.OFPST_FLOW}
-        flags = {'buf': '\x95\xf4', 'val': 38388}
+        type_ = {'buf': b'\x00\x01', 'val': ofproto.OFPST_FLOW}
+        flags = {'buf': b'\x95\xf4', 'val': 38388}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4317,9 +4000,9 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         # stats_type_cls = OFPFlowStats
         # OFP_FLOW_STATS_0_PACK_STR
         # '!HBx'...length, table_id, zfill
-        length = {'buf': '\x00\x60', 'val': 96}
-        table_id = {'buf': '\x51', 'val': 81}
-        zfill = '\x00'
+        length = {'buf': b'\x00\x60', 'val': 96}
+        table_id = {'buf': b'\x51', 'val': 81}
+        zfill = b'\x00'
 
         buf += length['buf'] \
             + table_id['buf'] \
@@ -4327,21 +4010,21 @@ class TestOFPFlowStatsReply(unittest.TestCase):
 
         # OFP_MATCH_PACK_STR
         # '!IH6s6sHBxHBB2xIIHH'...
-        match = '\x97\x7c\xa6\x1e' \
-            + '\x5e\xa0' \
-            + '\x70\x17\xdc\x80\x59\x9e' \
-            + '\x79\xc6\x56\x87\x92\x28' \
-            + '\xb1\x81' \
-            + '\xbe' \
-            + '\x00' \
-            + '\x01\xab' \
-            + '\x42' \
-            + '\xfe' \
-            + '\x00\x00' \
-            + '\xa4\x5d\x5c\x42' \
-            + '\xa2\x5c\x2e\x05' \
-            + '\x5a\x94' \
-            + '\x64\xd4'
+        match = b'\x97\x7c\xa6\x1e' \
+            + b'\x5e\xa0' \
+            + b'\x70\x17\xdc\x80\x59\x9e' \
+            + b'\x79\xc6\x56\x87\x92\x28' \
+            + b'\xb1\x81' \
+            + b'\xbe' \
+            + b'\x00' \
+            + b'\x01\xab' \
+            + b'\x42' \
+            + b'\xfe' \
+            + b'\x00\x00' \
+            + b'\xa4\x5d\x5c\x42' \
+            + b'\xa2\x5c\x2e\x05' \
+            + b'\x5a\x94' \
+            + b'\x64\xd4'
 
         buf += match
 
@@ -4349,17 +4032,17 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         # '!IIHHH6xQQQ'...duration_sec, duration_nsec, priority,
         #                 idle_timeout, hard_timeout, zfill,
         #                 cookie, packet_count, byte_count
-        duration_sec = {'buf': '\x94\x19\xb3\xd2', 'val': 2484712402}
-        duration_nsec = {'buf': '\xee\x66\xcf\x7c', 'val': 3999715196}
-        priority = {'buf': '\xe1\xc0', 'val': 57792}
-        idle_timeout = {'buf': '\x8e\x10', 'val': 36368}
-        hard_timeout = {'buf': '\xd4\x99', 'val': 54425}
-        zfill = '\x00' * 6
-        cookie = {'buf': '\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
+        duration_sec = {'buf': b'\x94\x19\xb3\xd2', 'val': 2484712402}
+        duration_nsec = {'buf': b'\xee\x66\xcf\x7c', 'val': 3999715196}
+        priority = {'buf': b'\xe1\xc0', 'val': 57792}
+        idle_timeout = {'buf': b'\x8e\x10', 'val': 36368}
+        hard_timeout = {'buf': b'\xd4\x99', 'val': 54425}
+        zfill = b'\x00' * 6
+        cookie = {'buf': b'\x0b\x01\xe8\xe5\xf0\x84\x8a\xe0',
                   'val': 793171083674290912}
-        packet_count = {'buf': '\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
+        packet_count = {'buf': b'\x47\x5c\xc6\x05\x28\xff\x7c\xdb',
                         'val': 5142202600015232219}
-        byte_count = {'buf': '\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
+        byte_count = {'buf': b'\x24\xe9\x4b\xee\xcb\x57\xd9\xc3',
                       'val': 2659740543924820419}
 
         buf += duration_sec['buf']
@@ -4373,12 +4056,12 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         buf += byte_count['buf']
 
         # <action>_PACK_STR...type_, len_ [others...]
-        type = {'buf': '\x00\x00', 'val': ofproto_v1_0.OFPAT_OUTPUT}
-        len = {'buf': '\x00\x08',
-               'val': ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE}
-        port = {'buf': '\x59\x2a', 'val': 22826}
-        max_len = {'buf': '\x00\x08',
-                   'val': ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE}
+        type = {'buf': b'\x00\x00', 'val': ofproto.OFPAT_OUTPUT}
+        len = {'buf': b'\x00\x08',
+               'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
+        port = {'buf': b'\x59\x2a', 'val': 22826}
+        max_len = {'buf': b'\x00\x08',
+                   'val': ofproto.OFP_ACTION_OUTPUT_SIZE}
 
         buf += type['buf'] \
             + len['buf'] \
@@ -4419,34 +4102,17 @@ class TestOFPFlowStatsReply(unittest.TestCase):
         eq_(port['val'], action.port)
         eq_(max_len['val'], action.max_len)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPAggregateStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPAggregateStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPAggregateStatsReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPAggregateStatsReply(Datapath)
@@ -4461,12 +4127,12 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto_v1_0.OFPT_STATS_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_STATS_MSG_SIZE \
-            + ofproto_v1_0.OFP_AGGREGATE_STATS_REPLY_SIZE
-        msg_len = {'buf': '\x00\x4c', 'val': msg_len_val}
-        xid = {'buf': '\xc6\xd6\xce\x38', 'val': 3335966264}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
+            + ofproto.OFP_AGGREGATE_STATS_REPLY_SIZE
+        msg_len = {'buf': b'\x00\x4c', 'val': msg_len_val}
+        xid = {'buf': b'\xc6\xd6\xce\x38', 'val': 3335966264}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4475,8 +4141,8 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x02', 'val': ofproto_v1_0.OFPST_AGGREGATE}
-        flags = {'buf': '\x65\x66', 'val': 25958}
+        type_ = {'buf': b'\x00\x02', 'val': ofproto.OFPST_AGGREGATE}
+        flags = {'buf': b'\x65\x66', 'val': 25958}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4484,12 +4150,12 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
         # stats_type_cls = OFPAggregateStats
         # OFP_AGGREGATE_STATS_REPLY_PACK_STR
         # '!QQI4x'...packet_count, byte_count, flow_count, zfill
-        packet_count = {'buf': '\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
+        packet_count = {'buf': b'\x43\x95\x1b\xfb\x0f\xf6\xa7\xdd',
                         'val': 4869829337189623773}
-        byte_count = {'buf': '\x36\xda\x2d\x80\x2a\x95\x35\xdd',
+        byte_count = {'buf': b'\x36\xda\x2d\x80\x2a\x95\x35\xdd',
                       'val': 3952521651464517085}
-        flow_count = {'buf': '\xc3\x0d\xc3\xed', 'val': 3272459245}
-        zfill = '\x00' * 4
+        flow_count = {'buf': b'\xc3\x0d\xc3\xed', 'val': 3272459245}
+        zfill = b'\x00' * 4
 
         buf += packet_count['buf'] \
             + byte_count['buf'] \
@@ -4516,34 +4182,17 @@ class TestOFPAggregateStatsReply(unittest.TestCase):
         eq_(byte_count['val'], body.byte_count)
         eq_(flow_count['val'], body.flow_count)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPTableStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPTableStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPTableStatsReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPTableStatsReply(Datapath)
@@ -4558,12 +4207,12 @@ class TestOFPTableStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto_v1_0.OFPT_STATS_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_STATS_MSG_SIZE \
-            + ofproto_v1_0.OFP_TABLE_STATS_SIZE
-        msg_len = {'buf': '\x00\x4c', 'val': msg_len_val}
-        xid = {'buf': '\xd6\xb4\x8d\xe6', 'val': 3602157030}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
+            + ofproto.OFP_TABLE_STATS_SIZE
+        msg_len = {'buf': b'\x00\x4c', 'val': msg_len_val}
+        xid = {'buf': b'\xd6\xb4\x8d\xe6', 'val': 3602157030}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4572,8 +4221,8 @@ class TestOFPTableStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x03', 'val': ofproto_v1_0.OFPST_TABLE}
-        flags = {'buf': '\xb3\xf0', 'val': 46064}
+        type_ = {'buf': b'\x00\x03', 'val': ofproto.OFPST_TABLE}
+        flags = {'buf': b'\xb3\xf0', 'val': 46064}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4582,15 +4231,15 @@ class TestOFPTableStatsReply(unittest.TestCase):
         # OFP_TABLE_STATS_PACK_STR
         # '!B3x32sIIIQQ'...table_id, zfill, name, wildcards, max_entries,
         #                  active_count, lookup_count, matched_count
-        table_id = {'buf': '\x5b', 'val': 91}
-        zfill = '\x00' * 3
-        name = 'name'.ljust(32)
-        wildcards = {'buf': '\xc5\xaf\x6e\x12', 'val': 3316608530}
-        max_entries = {'buf': '\x95\x6c\x78\x4d', 'val': 2506913869}
-        active_count = {'buf': '\x78\xac\xa8\x1e', 'val': 2024581150}
-        lookup_count = {'buf': '\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
+        table_id = {'buf': b'\x5b', 'val': 91}
+        zfill = b'\x00' * 3
+        name = b'name'.ljust(32)
+        wildcards = {'buf': b'\xc5\xaf\x6e\x12', 'val': 3316608530}
+        max_entries = {'buf': b'\x95\x6c\x78\x4d', 'val': 2506913869}
+        active_count = {'buf': b'\x78\xac\xa8\x1e', 'val': 2024581150}
+        lookup_count = {'buf': b'\x40\x1d\x9c\x39\x19\xec\xd4\x1c',
                         'val': 4620020561814017052}
-        matched_count = {'buf': '\x27\x35\x02\xb6\xc5\x5e\x17\x65',
+        matched_count = {'buf': b'\x27\x35\x02\xb6\xc5\x5e\x17\x65',
                          'val': 2825167325263435621}
 
         buf += table_id['buf'] \
@@ -4626,34 +4275,17 @@ class TestOFPTableStatsReply(unittest.TestCase):
         eq_(lookup_count['val'], body.lookup_count)
         eq_(matched_count['val'], body.matched_count)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPPortStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPPortStatsReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPPortStatsReply(Datapath)
@@ -4668,12 +4300,12 @@ class TestOFPPortStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto_v1_0.OFPT_STATS_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_STATS_MSG_SIZE \
-            + ofproto_v1_0.OFP_PORT_STATS_SIZE
-        msg_len = {'buf': '\x00\x74', 'val': msg_len_val}
-        xid = {'buf': '\xc2\xaf\x3d\xff', 'val': 3266264575}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
+            + ofproto.OFP_PORT_STATS_SIZE
+        msg_len = {'buf': b'\x00\x74', 'val': msg_len_val}
+        xid = {'buf': b'\xc2\xaf\x3d\xff', 'val': 3266264575}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4682,8 +4314,8 @@ class TestOFPPortStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x04', 'val': ofproto_v1_0.OFPST_PORT}
-        flags = {'buf': '\xda\xde', 'val': 56030}
+        type_ = {'buf': b'\x00\x04', 'val': ofproto.OFPST_PORT}
+        flags = {'buf': b'\xda\xde', 'val': 56030}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4694,31 +4326,31 @@ class TestOFPPortStatsReply(unittest.TestCase):
         #                       rx_bytes, tx_bytes, rx_dropped, tx_dropped,
         #                       rx_errors, tx_errors, rx_frame_err,
         #                       rx_over_err, rx_crc_err, collisions
-        port_no = {'buf': '\xe7\x6b', 'val': 59243}
-        zfill = '\x00' * 6
-        rx_packets = {'buf': '\x53\x44\x36\x61\xc4\x86\xc0\x37',
+        port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+        zfill = b'\x00' * 6
+        rx_packets = {'buf': b'\x53\x44\x36\x61\xc4\x86\xc0\x37',
                       'val': 5999980397101236279}
-        tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+        tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                       'val': 2856480458895760962}
-        rx_bytes = {'buf': '\x55\xa1\x38\x60\x43\x97\x0d\x89',
+        rx_bytes = {'buf': b'\x55\xa1\x38\x60\x43\x97\x0d\x89',
                     'val': 6170274950576278921}
-        tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+        tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                     'val': 8638420181865882538}
-        rx_dropped = {'buf': '\x60\xe6\x20\x01\x24\xda\x4e\x5a',
+        rx_dropped = {'buf': b'\x60\xe6\x20\x01\x24\xda\x4e\x5a',
                       'val': 6982303461569875546}
-        tx_dropped = {'buf': '\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
+        tx_dropped = {'buf': b'\x09\x2d\x5d\x71\x71\xb6\x8e\xc7',
                       'val': 661287462113808071}
-        rx_errors = {'buf': '\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
+        rx_errors = {'buf': b'\x2f\x7e\x35\xb3\x66\x3c\x19\x0d',
                      'val': 3422231811478788365}
-        tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+        tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                      'val': 6283093430376743019}
-        rx_frame_err = {'buf': '\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
+        rx_frame_err = {'buf': b'\x0c\x28\x6f\xad\xce\x66\x6e\x8b',
                         'val': 876072919806406283}
-        rx_over_err = {'buf': '\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
+        rx_over_err = {'buf': b'\x5a\x90\x8f\x9b\xfc\x82\x2e\xa0',
                        'val': 6525873760178941600}
-        rx_crc_err = {'buf': '\x73\x3a\x71\x17\xd6\x74\x69\x47',
+        rx_crc_err = {'buf': b'\x73\x3a\x71\x17\xd6\x74\x69\x47',
                       'val': 8303073210207070535}
-        collisions = {'buf': '\x2f\x52\x0c\x79\x96\x03\x6e\x79',
+        collisions = {'buf': b'\x2f\x52\x0c\x79\x96\x03\x6e\x79',
                       'val': 3409801584220270201}
 
         buf += port_no['buf'] \
@@ -4766,34 +4398,17 @@ class TestOFPPortStatsReply(unittest.TestCase):
         eq_(rx_crc_err['val'], body.rx_crc_err)
         eq_(collisions['val'], body.collisions)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPQueueStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPQueueStatsReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPQueueStatsReply(Datapath)
@@ -4808,12 +4423,12 @@ class TestOFPQueueStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto_v1_0.OFPT_STATS_REPLY}
-        msg_len_val = ofproto_v1_0.OFP_STATS_MSG_SIZE \
-            + ofproto_v1_0.OFP_QUEUE_STATS_SIZE
-        msg_len = {'buf': '\x00\x2c', 'val': msg_len_val}
-        xid = {'buf': '\x19\xfc\x28\x6c', 'val': 435955820}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        msg_len_val = ofproto.OFP_STATS_MSG_SIZE \
+            + ofproto.OFP_QUEUE_STATS_SIZE
+        msg_len = {'buf': b'\x00\x2c', 'val': msg_len_val}
+        xid = {'buf': b'\x19\xfc\x28\x6c', 'val': 435955820}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4822,8 +4437,8 @@ class TestOFPQueueStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\x00\x05', 'val': ofproto_v1_0.OFPST_QUEUE}
-        flags = {'buf': '\x3b\x2b', 'val': 15147}
+        type_ = {'buf': b'\x00\x05', 'val': ofproto.OFPST_QUEUE}
+        flags = {'buf': b'\x3b\x2b', 'val': 15147}
 
         buf += type_['buf'] \
             + flags['buf']
@@ -4831,14 +4446,14 @@ class TestOFPQueueStatsReply(unittest.TestCase):
         # stats_type_cls = OFPQueueStats
         # OFP_QUEUE_STATS_PACK_STR
         # '!H2xIQQQ...port_no, queue_id, tx_bytes, tx_packets, tx_errors
-        port_no = {'buf': '\xe7\x6b', 'val': 59243}
-        zfill = '\x00' * 2
-        queue_id = {'buf': '\x2a\xa8\x7f\x32', 'val': 715685682}
-        tx_bytes = {'buf': '\x77\xe1\xd5\x63\x18\xae\x63\xaa',
+        port_no = {'buf': b'\xe7\x6b', 'val': 59243}
+        zfill = b'\x00' * 2
+        queue_id = {'buf': b'\x2a\xa8\x7f\x32', 'val': 715685682}
+        tx_bytes = {'buf': b'\x77\xe1\xd5\x63\x18\xae\x63\xaa',
                     'val': 8638420181865882538}
-        tx_packets = {'buf': '\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
+        tx_packets = {'buf': b'\x27\xa4\x41\xd7\xd4\x53\x9e\x42',
                       'val': 2856480458895760962}
-        tx_errors = {'buf': '\x57\x32\x08\x2f\x88\x32\x40\x6b',
+        tx_errors = {'buf': b'\x57\x32\x08\x2f\x88\x32\x40\x6b',
                      'val': 6283093430376743019}
 
         buf += port_no['buf'] \
@@ -4870,34 +4485,17 @@ class TestOFPQueueStatsReply(unittest.TestCase):
         eq_(tx_packets['val'], body.tx_packets)
         eq_(tx_errors['val'], body.tx_errors)
 
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
-
     def test_serialize(self):
         # Not used.
         pass
 
 
 class TestOFPVendorStatsReply(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendorStatsReply
+    """ Test case for ofproto_v1_0_parser.OFPVendorStatsReply
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPVendorStatsReply(Datapath)
@@ -4912,12 +4510,12 @@ class TestOFPVendorStatsReply(unittest.TestCase):
         pass
 
     def test_parser(self):
-        version = {'buf': '\x01', 'val': ofproto_v1_0.OFP_VERSION}
-        msg_type = {'buf': '\x11', 'val': ofproto_v1_0.OFPT_STATS_REPLY}
-        # ofproto_v1_0.OFP_STATS_MSG_SIZE + len(specific_data)
-        msg_len = {'buf': '\x00\x18',
-                   'val': ofproto_v1_0.OFP_STATS_MSG_SIZE + 12}
-        xid = {'buf': '\x94\xc4\xd2\xcd', 'val': 2495926989}
+        version = {'buf': b'\x01', 'val': ofproto.OFP_VERSION}
+        msg_type = {'buf': b'\x11', 'val': ofproto.OFPT_STATS_REPLY}
+        # ofproto.OFP_STATS_MSG_SIZE + len(specific_data)
+        msg_len = {'buf': b'\x00\x18',
+                   'val': ofproto.OFP_STATS_MSG_SIZE + 12}
+        xid = {'buf': b'\x94\xc4\xd2\xcd', 'val': 2495926989}
 
         buf = version['buf'] \
             + msg_type['buf'] \
@@ -4926,14 +4524,14 @@ class TestOFPVendorStatsReply(unittest.TestCase):
 
         # OFP_STATS_MSG_PACK_STR
         # '!HH'...type_, flags
-        type_ = {'buf': '\xff\xff', 'val': ofproto_v1_0.OFPST_VENDOR}
-        flags = {'buf': '\x30\xd9', 'val': 12505}
+        type_ = {'buf': b'\xff\xff', 'val': ofproto.OFPST_VENDOR}
+        flags = {'buf': b'\x30\xd9', 'val': 12505}
 
         buf += type_['buf'] \
             + flags['buf']
 
         # stats_type_cls = OFPVendorStats
-        specific_data = 'specific_data'
+        specific_data = b'specific_data'
 
         buf += specific_data
 
@@ -4953,24 +4551,7 @@ class TestOFPVendorStatsReply(unittest.TestCase):
 
         # body
         body = res.body[0]
-        eq_(specific_data, body.specific_data)
-
-        # test __str__()
-        list_ = ('version:', 'msg_type', 'xid',)
-
-        check = {}
-        str_ = str(res)
-        str_ = str_.rsplit()
-
-        i = 0
-        for s in str_:
-            if s in list_:
-                check[str_[i]] = str_[i + 1]
-            i += 1
-
-        eq_(hex(version['val']).find(check['version:']), 0)
-        eq_(hex(msg_type['val']).find(check['msg_type']), 0)
-        eq_(hex(xid['val']).find(check['xid']), 0)
+        eq_(specific_data, body)
 
     def test_serialize(self):
         # Not used.
@@ -4978,11 +4559,11 @@ class TestOFPVendorStatsReply(unittest.TestCase):
 
 
 class TestOFPFeaturesRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFeaturesRequest
+    """ Test case for ofproto_v1_0_parser.OFPFeaturesRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPFeaturesRequest(Datapath)
@@ -5003,25 +4584,25 @@ class TestOFPFeaturesRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_FEATURES_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_FEATURES_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
-        fmt = ofproto_v1_0.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
 
-        res = struct.unpack(fmt, str(self.c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_FEATURES_REQUEST, res[1])
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_FEATURES_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
 
 class TestOFPGetConfigRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPGetConfigRequest
+    """ Test case for ofproto_v1_0_parser.OFPGetConfigRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPGetConfigRequest(Datapath)
@@ -5042,31 +4623,31 @@ class TestOFPGetConfigRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_GET_CONFIG_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_GET_CONFIG_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
-        fmt = ofproto_v1_0.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
 
-        res = struct.unpack(fmt, str(self.c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_GET_CONFIG_REQUEST, res[1])
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_GET_CONFIG_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
 
 class TestOFPSetConfig(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPSetConfig
+    """ Test case for ofproto_v1_0_parser.OFPSetConfig
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     # OFP_SWITCH_CONFIG_PACK_STR
     # '!HH'...flags, miss_send_len
-    flags = {'buf': '\xa0\xe2', 'val': 41186}
-    miss_send_len = {'buf': '\x36\x0e', 'val': 13838}
+    flags = {'buf': b'\xa0\xe2', 'val': 41186}
+    miss_send_len = {'buf': b'\x36\x0e', 'val': 13838}
 
     c = OFPSetConfig(Datapath,
                      flags['val'],
@@ -5089,17 +4670,17 @@ class TestOFPSetConfig(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_SET_CONFIG, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_SET_CONFIG, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_SWITCH_CONFIG_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_SWITCH_CONFIG_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_SET_CONFIG, res[1])
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_SET_CONFIG, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
         eq_(self.flags['val'], res[4])
@@ -5107,11 +4688,11 @@ class TestOFPSetConfig(unittest.TestCase):
 
 
 class TestOFPPacketOut(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPacketOut
+    """ Test case for ofproto_v1_0_parser.OFPPacketOut
     """
 
     port = 0x2ae0
-    actions = [OFPActionOutput(port)]
+    actions = [OFPActionOutput(port, max_len=0)]
 
     def setUp(self):
         pass
@@ -5121,7 +4702,7 @@ class TestOFPPacketOut(unittest.TestCase):
 
     def _get_obj(self, buffer_id, in_port, data=None):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
         c = OFPPacketOut(Datapath,
@@ -5149,37 +4730,37 @@ class TestOFPPacketOut(unittest.TestCase):
     def test_serialize(self):
         buffer_id = 0xffffffff
         in_port = 0x9e07
-        data = 'Message'
+        data = b'Message'
 
         c = self._get_obj(buffer_id, in_port, data)
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_PACKET_OUT, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_PACKET_OUT, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_PACKET_OUT_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_PACKET_OUT_PACK_STR.replace('!', '') \
+            + ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '') \
             + str(len(data)) + 's'
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_PACKET_OUT, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_PACKET_OUT, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_PACKET_OUT_PACK_STR
         eq_(buffer_id, res[4])
         eq_(in_port, res[5])
-        eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, res[6])
+        eq_(ofproto.OFP_ACTION_OUTPUT_SIZE, res[6])
 
         # OFP_ACTION_OUTPUT_PACK_STR
-        eq_(ofproto_v1_0.OFPAT_OUTPUT, res[7])
-        eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, res[8])
+        eq_(ofproto.OFPAT_OUTPUT, res[7])
+        eq_(ofproto.OFP_ACTION_OUTPUT_SIZE, res[8])
         eq_(self.port, res[9])
         eq_(0, res[10])
 
@@ -5197,41 +4778,41 @@ class TestOFPPacketOut(unittest.TestCase):
 
 
 class TestOFPFlowMod(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowMod
+    """ Test case for ofproto_v1_0_parser.OFPFlowMod
     """
 
     # OFP_FLOW_MOD_PACK_STR0
     # '!QHHHHIHH'...cookie, command, idle_timeout, hard_timeout,
     #               priority, buffer_id, out_port, flags
-    cookie = {'buf': '\x1d\x86\xce\x6e\x8d\xc0\xbe\xa8',
+    cookie = {'buf': b'\x1d\x86\xce\x6e\x8d\xc0\xbe\xa8',
               'val': 2127614848199081640}
-    command = {'buf': '\xe1\x55', 'val': 57685}
-    idle_timeout = {'buf': '\xf3\x6d', 'val': 62317}
-    hard_timeout = {'buf': '\x1c\xc5', 'val': 7365}
-    priority = {'buf': '\x9c\xe3', 'val': 40163}
-    buffer_id = {'buf': '\xf0\xa1\x80\x33', 'val': 4037115955}
-    out_port = {'buf': '\xfe\x0d', 'val': 65037}
-    flags = {'buf': '\x00\x87', 'val': 135}
+    command = {'buf': b'\xe1\x55', 'val': 57685}
+    idle_timeout = {'buf': b'\xf3\x6d', 'val': 62317}
+    hard_timeout = {'buf': b'\x1c\xc5', 'val': 7365}
+    priority = {'buf': b'\x9c\xe3', 'val': 40163}
+    buffer_id = {'buf': b'\xf0\xa1\x80\x33', 'val': 4037115955}
+    out_port = {'buf': b'\xfe\x0d', 'val': 65037}
+    flags = {'buf': b'\x00\x87', 'val': 135}
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-    in_port = {'buf': '\x37\x8b', 'val': 14219}
-    dl_src = '\xdf\xcf\xe1\x5d\xcf\xc0'
-    dl_dst = '\x76\xb3\xfb\xc6\x21\x2f'
-    dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-    dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-    nw_tos = {'buf': '\xde', 'val': 222}
-    nw_proto = {'buf': '\xe5', 'val': 229}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-    nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-    tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-    tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+    wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+    in_port = {'buf': b'\x37\x8b', 'val': 14219}
+    dl_src = b'\xdf\xcf\xe1\x5d\xcf\xc0'
+    dl_dst = b'\x76\xb3\xfb\xc6\x21\x2f'
+    dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+    dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+    nw_tos = {'buf': b'\xde', 'val': 222}
+    nw_proto = {'buf': b'\xe5', 'val': 229}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
+    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+    tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+    tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
     match = OFPMatch(wildcards['val'],
                      in_port['val'],
@@ -5248,7 +4829,7 @@ class TestOFPFlowMod(unittest.TestCase):
                      tp_dst['val'])
 
     port = 0x2ae0
-    actions = [OFPActionOutput(port)]
+    actions = [OFPActionOutput(port, max_len=1000)]
 
     def setUp(self):
         pass
@@ -5258,7 +4839,7 @@ class TestOFPFlowMod(unittest.TestCase):
 
     def _get_obj(self, actions=None):
         class Datapath(object):
-            ofproto = ofproto_v1_0
+            ofproto = ofproto  # copy to class attribute
             ofproto_parser = ofproto_v1_0_parser
 
         c = OFPFlowMod(Datapath,
@@ -5301,21 +4882,21 @@ class TestOFPFlowMod(unittest.TestCase):
         c = self._get_obj(self.actions)
         c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, c.version)
-        eq_(ofproto_v1_0.OFPT_FLOW_MOD, c.msg_type)
+        eq_(ofproto.OFP_VERSION, c.version)
+        eq_(ofproto.OFPT_FLOW_MOD, c.msg_type)
         eq_(0, c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_MATCH_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_FLOW_MOD_PACK_STR0.replace('!', '') \
-            + ofproto_v1_0.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_MATCH_PACK_STR.replace('!', '') \
+            + ofproto.OFP_FLOW_MOD_PACK_STR0.replace('!', '') \
+            + ofproto.OFP_ACTION_OUTPUT_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(c.buf))
+        res = struct.unpack(fmt, six.binary_type(c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_FLOW_MOD, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_FLOW_MOD, res[1])
         eq_(len(c.buf), res[2])
         eq_(0, res[3])
 
@@ -5345,18 +4926,18 @@ class TestOFPFlowMod(unittest.TestCase):
         eq_(self.flags['val'], res[24])
 
         # OFP_ACTION_OUTPUT_PACK_STR
-        eq_(ofproto_v1_0.OFPAT_OUTPUT, res[25])
-        eq_(ofproto_v1_0.OFP_ACTION_OUTPUT_SIZE, res[26])
+        eq_(ofproto.OFPAT_OUTPUT, res[25])
+        eq_(ofproto.OFP_ACTION_OUTPUT_SIZE, res[26])
         eq_(self.port, res[27])
-        eq_(0, res[28])
+        eq_(1000, res[28])
 
 
 class TestOFPBarrierRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPBarrierRequest
+    """ Test case for ofproto_v1_0_parser.OFPBarrierRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     c = OFPBarrierRequest(Datapath)
@@ -5377,31 +4958,31 @@ class TestOFPBarrierRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_BARRIER_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_BARRIER_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
-        fmt = ofproto_v1_0.OFP_HEADER_PACK_STR
+        fmt = ofproto.OFP_HEADER_PACK_STR
 
-        res = struct.unpack(fmt, str(self.c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_BARRIER_REQUEST, res[1])
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_BARRIER_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
 
 class TestOFPQueueGetConfigRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueGetConfigRequest
+    """ Test case for ofproto_v1_0_parser.OFPQueueGetConfigRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
     # OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR
     # '!H2x'...port, zfill
-    port = {'buf': '\xa0\xe2', 'val': 41186}
-    zfill = '\x00' * 2
+    port = {'buf': b'\xa0\xe2', 'val': 41186}
+    zfill = b'\x00' * 2
 
     c = OFPQueueGetConfigRequest(Datapath,
                                  port['val'])
@@ -5422,31 +5003,31 @@ class TestOFPQueueGetConfigRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_QUEUE_GET_CONFIG_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_QUEUE_GET_CONFIG_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
-        a = ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '')
-        b = ofproto_v1_0.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR.replace('!', '')
+        a = ofproto.OFP_HEADER_PACK_STR.replace('!', '')
+        b = ofproto.OFP_QUEUE_GET_CONFIG_REQUEST_PACK_STR.replace('!', '')
         fmt = '!' + a + b
 
-        res = struct.unpack(fmt, str(self.c.buf))
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_QUEUE_GET_CONFIG_REQUEST, res[1])
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_QUEUE_GET_CONFIG_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
         eq_(self.port['val'], res[4])
 
 
 class TestOFPDescStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPDescStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPDescStatsRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     c = OFPDescStatsRequest(Datapath, flags['val'])
 
@@ -5457,7 +5038,7 @@ class TestOFPDescStatsRequest(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(ofproto_v1_0.OFPST_DESC, self.c.type)
+        eq_(ofproto.OFPST_DESC, self.c.type)
         eq_(self.flags['val'], self.c.flags)
 
     def test_parser(self):
@@ -5467,56 +5048,56 @@ class TestOFPDescStatsRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_STATS_MSG_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_STATS_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_STATS_MSG_PACK_STR
-        eq_(ofproto_v1_0.OFPST_DESC, res[4])
+        eq_(ofproto.OFPST_DESC, res[4])
         eq_(self.flags['val'], res[5])
 
 
 class TestOFPFlowStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPFlowStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPFlowStatsRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xd2\x71\x25\x23', 'val': 3530630435}
-    in_port = {'buf': '\x37\x8b', 'val': 14219}
-    dl_src = '\x58\xd0\x8a\x69\xa4\xfc'
-    dl_dst = '\xb6\xe2\xef\xb1\xa6\x2d'
-    dl_vlan = {'buf': '\xc1\xf9', 'val': 49657}
-    dl_vlan_pcp = {'buf': '\x79', 'val': 121}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\xa6\x9e', 'val': 42654}
-    nw_tos = {'buf': '\xde', 'val': 222}
-    nw_proto = {'buf': '\xe5', 'val': 229}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\x1b\x6d\x8d\x4b', 'val': 460164427}
-    nw_dst = {'buf': '\xab\x25\xe1\x20', 'val': 2871386400}
-    tp_src = {'buf': '\xd5\xc3', 'val': 54723}
-    tp_dst = {'buf': '\x78\xb9', 'val': 30905}
+    wildcards = {'buf': b'\xd2\x71\x25\x23', 'val': 3530630435}
+    in_port = {'buf': b'\x37\x8b', 'val': 14219}
+    dl_src = b'\x58\xd0\x8a\x69\xa4\xfc'
+    dl_dst = b'\xb6\xe2\xef\xb1\xa6\x2d'
+    dl_vlan = {'buf': b'\xc1\xf9', 'val': 49657}
+    dl_vlan_pcp = {'buf': b'\x79', 'val': 121}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\xa6\x9e', 'val': 42654}
+    nw_tos = {'buf': b'\xde', 'val': 222}
+    nw_proto = {'buf': b'\xe5', 'val': 229}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\x1b\x6d\x8d\x4b', 'val': 460164427}
+    nw_dst = {'buf': b'\xab\x25\xe1\x20', 'val': 2871386400}
+    tp_src = {'buf': b'\xd5\xc3', 'val': 54723}
+    tp_dst = {'buf': b'\x78\xb9', 'val': 30905}
 
     match = OFPMatch(wildcards['val'],
                      in_port['val'],
@@ -5534,9 +5115,9 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
 
     # OFP_FLOW_STATS_REQUEST_ID_PORT_STR
     # '!BxH'...table_id, zfill, out_port
-    table_id = {'buf': '\xd1', 'val': 209}
-    zfill = '\x00' * 1
-    out_port = {'buf': '\xe4\x9a', 'val': 58522}
+    table_id = {'buf': b'\xd1', 'val': 209}
+    zfill = b'\x00' * 1
+    out_port = {'buf': b'\xe4\x9a', 'val': 58522}
 
     c = OFPFlowStatsRequest(Datapath,
                             flags['val'],
@@ -5551,7 +5132,7 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(ofproto_v1_0.OFPST_FLOW, self.c.type)
+        eq_(ofproto.OFPST_FLOW, self.c.type)
         eq_(self.flags['val'], self.c.flags)
         eq_(self.table_id['val'], self.c.table_id)
         eq_(self.out_port['val'], self.c.out_port)
@@ -5567,26 +5148,26 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_STATS_MSG_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_MATCH_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_FLOW_STATS_REQUEST_ID_PORT_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_MATCH_PACK_STR.replace('!', '') \
+            + ofproto.OFP_FLOW_STATS_REQUEST_ID_PORT_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_STATS_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_STATS_MSG_PACK_STR
-        eq_(ofproto_v1_0.OFPST_FLOW, res[4])
+        eq_(ofproto.OFPST_FLOW, res[4])
         eq_(self.flags['val'], res[5])
 
         # OFP_MATCH_PACK_STR
@@ -5610,34 +5191,34 @@ class TestOFPFlowStatsRequest(unittest.TestCase):
 
 
 class TestOFPAggregateStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPAggregateStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPAggregateStatsRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_MATCH_PACK_STR
     # '!IH6s6sHBxHBB2xIIHH'...wildcards, in_port, dl_src, dl_dst, dl_vlan,
     #                         dl_vlan_pcp, dl_type, nw_tos, nw_proto,
     #                         nw_src, nw_dst, tp_src, tp_dst
-    wildcards = {'buf': '\xea\x66\x4a\xd4', 'val': 3932572372}
-    in_port = {'buf': '\x64\xac', 'val': 25772}
-    dl_src = '\x90\x13\x60\x5e\x20\x4d'
-    dl_dst = '\xb5\x5d\x14\x5e\xb9\x22'
-    dl_vlan = {'buf': '\x8b\xeb', 'val': 35819}
-    dl_vlan_pcp = {'buf': '\xe8', 'val': 232}
-    zfill0 = '\x00'
-    dl_type = {'buf': '\62\xc9', 'val': 25289}
-    nw_tos = {'buf': '\xb5', 'val': 181}
-    nw_proto = {'buf': '\xc4', 'val': 196}
-    zfil11 = '\x00' * 2
-    nw_src = {'buf': '\xb7\xd1\xb7\xef', 'val': 3083974639}
-    nw_dst = {'buf': '\x7c\xc6\x18\x15', 'val': 2093357077}
-    tp_src = {'buf': '\x26\x9a', 'val': 9882}
-    tp_dst = {'buf': '\x7a\x89', 'val': 31369}
+    wildcards = {'buf': b'\xea\x66\x4a\xd4', 'val': 3932572372}
+    in_port = {'buf': b'\x64\xac', 'val': 25772}
+    dl_src = b'\x90\x13\x60\x5e\x20\x4d'
+    dl_dst = b'\xb5\x5d\x14\x5e\xb9\x22'
+    dl_vlan = {'buf': b'\x8b\xeb', 'val': 35819}
+    dl_vlan_pcp = {'buf': b'\xe8', 'val': 232}
+    zfill0 = b'\x00'
+    dl_type = {'buf': b'\62\xc9', 'val': 25289}
+    nw_tos = {'buf': b'\xb5', 'val': 181}
+    nw_proto = {'buf': b'\xc4', 'val': 196}
+    zfil11 = b'\x00' * 2
+    nw_src = {'buf': b'\xb7\xd1\xb7\xef', 'val': 3083974639}
+    nw_dst = {'buf': b'\x7c\xc6\x18\x15', 'val': 2093357077}
+    tp_src = {'buf': b'\x26\x9a', 'val': 9882}
+    tp_dst = {'buf': b'\x7a\x89', 'val': 31369}
 
     match = OFPMatch(wildcards['val'],
                      in_port['val'],
@@ -5655,9 +5236,9 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
 
     # OFP_FLOW_STATS_REQUEST_ID_PORT_STR
     # '!BxH'...table_id, zfill, out_port
-    table_id = {'buf': '\xd1', 'val': 209}
-    zfill = '\x00' * 1
-    out_port = {'buf': '\xb5\xe8', 'val': 46568}
+    table_id = {'buf': b'\xd1', 'val': 209}
+    zfill = b'\x00' * 1
+    out_port = {'buf': b'\xb5\xe8', 'val': 46568}
 
     c = OFPAggregateStatsRequest(Datapath,
                                  flags['val'],
@@ -5672,7 +5253,7 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(ofproto_v1_0.OFPST_AGGREGATE, self.c.type)
+        eq_(ofproto.OFPST_AGGREGATE, self.c.type)
         eq_(self.flags['val'], self.c.flags)
         eq_(self.table_id['val'], self.c.table_id)
         eq_(self.out_port['val'], self.c.out_port)
@@ -5688,26 +5269,26 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_STATS_MSG_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_MATCH_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_FLOW_STATS_REQUEST_ID_PORT_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_MATCH_PACK_STR.replace('!', '') \
+            + ofproto.OFP_FLOW_STATS_REQUEST_ID_PORT_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_STATS_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_STATS_MSG_PACK_STR
-        eq_(ofproto_v1_0.OFPST_AGGREGATE, res[4])
+        eq_(ofproto.OFPST_AGGREGATE, res[4])
         eq_(self.flags['val'], res[5])
 
         # OFP_MATCH_PACK_STR
@@ -5731,14 +5312,14 @@ class TestOFPAggregateStatsRequest(unittest.TestCase):
 
 
 class TestOFPTableStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPTableStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPTableStatsRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     c = OFPTableStatsRequest(Datapath, flags['val'])
 
@@ -5749,7 +5330,7 @@ class TestOFPTableStatsRequest(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(ofproto_v1_0.OFPST_TABLE, self.c.type)
+        eq_(ofproto.OFPST_TABLE, self.c.type)
         eq_(self.flags['val'], self.c.flags)
 
     def test_parser(self):
@@ -5759,40 +5340,40 @@ class TestOFPTableStatsRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_STATS_MSG_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_STATS_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_STATS_MSG_PACK_STR
-        eq_(ofproto_v1_0.OFPST_TABLE, res[4])
+        eq_(ofproto.OFPST_TABLE, res[4])
         eq_(self.flags['val'], res[5])
 
 
 class TestOFPPortStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPPortStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPPortStatsRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_PORT_STATS_REQUEST_PACK_STR
     # '!H6x'...port_no, zfill
-    port_no = {'buf': '\x6d\x27', 'val': 27943}
+    port_no = {'buf': b'\x6d\x27', 'val': 27943}
 
     c = OFPPortStatsRequest(Datapath,
                             flags['val'],
@@ -5805,7 +5386,7 @@ class TestOFPPortStatsRequest(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(ofproto_v1_0.OFPST_PORT, self.c.type)
+        eq_(ofproto.OFPST_PORT, self.c.type)
         eq_(self.flags['val'], self.c.flags)
         eq_(self.port_no['val'], self.c.port_no)
 
@@ -5816,25 +5397,25 @@ class TestOFPPortStatsRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_STATS_MSG_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_PORT_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_PORT_STATS_REQUEST_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_STATS_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_STATS_MSG_PACK_STR
-        eq_(ofproto_v1_0.OFPST_PORT, res[4])
+        eq_(ofproto.OFPST_PORT, res[4])
         eq_(self.flags['val'], res[5])
 
         # OFP_PORT_STATS_REQUEST_PACK_STR
@@ -5842,19 +5423,19 @@ class TestOFPPortStatsRequest(unittest.TestCase):
 
 
 class TestOFPQueueStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPQueueStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPQueueStatsRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_QUEUE_STATS_REQUEST_PACK_STR
     # '!HxxI'...port_no, zfill, zfill, queue_id
-    port_no = {'buf': '\x0c\x2d', 'val': 3117}
-    queue_id = {'buf': '\x1b\xe6\xba\x36', 'val': 468105782}
+    port_no = {'buf': b'\x0c\x2d', 'val': 3117}
+    queue_id = {'buf': b'\x1b\xe6\xba\x36', 'val': 468105782}
 
     c = OFPQueueStatsRequest(Datapath,
                              flags['val'],
@@ -5868,7 +5449,7 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(ofproto_v1_0.OFPST_QUEUE, self.c.type)
+        eq_(ofproto.OFPST_QUEUE, self.c.type)
         eq_(self.flags['val'], self.c.flags)
         eq_(self.port_no['val'], self.c.port_no)
         eq_(self.queue_id['val'], self.c.queue_id)
@@ -5880,25 +5461,25 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_STATS_MSG_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_QUEUE_STATS_REQUEST_PACK_STR.replace('!', '')
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_QUEUE_STATS_REQUEST_PACK_STR.replace('!', '')
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_STATS_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_STATS_MSG_PACK_STR
-        eq_(ofproto_v1_0.OFPST_QUEUE, res[4])
+        eq_(ofproto.OFPST_QUEUE, res[4])
         eq_(self.flags['val'], res[5])
 
         # OFP_QUEUE_STATS_REQUEST_PACK_STR
@@ -5907,20 +5488,20 @@ class TestOFPQueueStatsRequest(unittest.TestCase):
 
 
 class TestOFPVendorStatsRequest(unittest.TestCase):
-    """ Test case for ofprotp_v1_0_parser.OFPVendorStatsRequest
+    """ Test case for ofproto_v1_0_parser.OFPVendorStatsRequest
     """
 
     class Datapath(object):
-        ofproto = ofproto_v1_0
+        ofproto = ofproto  # copy to class attribute
         ofproto_parser = ofproto_v1_0_parser
 
-    flags = {'buf': '\x00\x00', 'val': 0}
+    flags = {'buf': b'\x00\x00', 'val': 0}
 
     # OFP_VENDOR_STATS_MSG_PACK_STR
     # '!I'...vendor
-    vendor = {'buf': '\xff\xff\xff\xff', 'val': ofproto_v1_0.OFPAT_VENDOR}
+    vendor = {'buf': b'\xff\xff\xff\xff', 'val': ofproto.OFPAT_VENDOR}
 
-    specific_data = 'specific_data'
+    specific_data = b'specific_data'
 
     c = OFPVendorStatsRequest(Datapath,
                               flags['val'],
@@ -5934,7 +5515,7 @@ class TestOFPVendorStatsRequest(unittest.TestCase):
         pass
 
     def test_init(self):
-        eq_(ofproto_v1_0.OFPST_VENDOR, self.c.type)
+        eq_(ofproto.OFPST_VENDOR, self.c.type)
         eq_(self.flags['val'], self.c.flags)
         eq_(self.vendor['val'], self.c.vendor)
         eq_(self.specific_data, self.c.specific_data)
@@ -5946,26 +5527,26 @@ class TestOFPVendorStatsRequest(unittest.TestCase):
     def test_serialize(self):
         self.c.serialize()
 
-        eq_(ofproto_v1_0.OFP_VERSION, self.c.version)
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, self.c.msg_type)
+        eq_(ofproto.OFP_VERSION, self.c.version)
+        eq_(ofproto.OFPT_STATS_REQUEST, self.c.msg_type)
         eq_(0, self.c.xid)
 
         fmt = '!' \
-            + ofproto_v1_0.OFP_HEADER_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_STATS_MSG_PACK_STR.replace('!', '') \
-            + ofproto_v1_0.OFP_VENDOR_STATS_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_HEADER_PACK_STR.replace('!', '') \
+            + ofproto.OFP_STATS_MSG_PACK_STR.replace('!', '') \
+            + ofproto.OFP_VENDOR_STATS_MSG_PACK_STR.replace('!', '') \
             + str(len(self.specific_data)) + 's'
 
-        res = struct.unpack(fmt, str(self.c.buf))
+        res = struct.unpack(fmt, six.binary_type(self.c.buf))
 
         # OFP_HEADER_PACK_STR
-        eq_(ofproto_v1_0.OFP_VERSION, res[0])
-        eq_(ofproto_v1_0.OFPT_STATS_REQUEST, res[1])
+        eq_(ofproto.OFP_VERSION, res[0])
+        eq_(ofproto.OFPT_STATS_REQUEST, res[1])
         eq_(len(self.c.buf), res[2])
         eq_(0, res[3])
 
         # OFP_STATS_MSG_PACK_STR
-        eq_(ofproto_v1_0.OFPST_VENDOR, res[4])
+        eq_(ofproto.OFPST_VENDOR, res[4])
         eq_(self.flags['val'], res[5])
 
         # OFP_VENDOR_STATS_MSG_PACK_STR

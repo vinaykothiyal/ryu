@@ -10,6 +10,13 @@ packets. dpkt is the popular library for the same purpose, however it
 is not designed to handle protocols that are interleaved; vlan, mpls,
 gre, etc. So we implemented our own packet library.
 
+Network Addresses
+=================
+
+Unless otherwise specified, MAC/IPv4/IPv6 addresses are specified
+using human readable strings for this library.
+For example, '08:60:6e:7f:74:e7', '192.0.2.1', 'fe80::a60:6eff:fe7f:74e7'.
+
 Parsing Packet
 ==============
 
@@ -45,8 +52,7 @@ If vlan is not used, you see something like::
     <ryu.lib.packet.tcp.tcp object at 0x107a5d850>
 
 You can access to a specific protocol class instance by using the
-packet class find_protocol method. Let's try to check VLAN id if VLAN
-is used:
+packet class iterator.  Let's try to check VLAN id if VLAN is used:
 
 .. code-block:: python
        
@@ -55,19 +61,18 @@ is used:
     @handler.set_ev_cls(ofp_event.EventOFPPacketIn, handler.MAIN_DISPATCHER)
     def packet_in_handler(self, ev):
         pkt = packet.Packet(array.array('B', ev.msg.data))
-        for p in pkt.protocols:
-            print p
-        vp = pkt.find_protocol('vlan')
-        if vp:
-            print "vlan found:", vp.vid
+        for p in pkt:
+            print p.protocol_name, p
+            if p.protocol_name == 'vlan':
+                print 'vid = ', p.vid
 
 You see something like::
 
-    <ryu.lib.packet.ethernet.ethernet object at 0x107a5d790>
-    <ryu.lib.packet.vlan.vlan object at 0x107a5d7d0>
-    <ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810>
-    <ryu.lib.packet.tcp.tcp object at 0x107a5d850>
-    vlan found: 10
+    ethernet <ryu.lib.packet.ethernet.ethernet object at 0x107a5d790>
+    vlan <ryu.lib.packet.vlan.vlan object at 0x107a5d7d0>
+    vid = 10
+    ipv4 <ryu.lib.packet.ipv4.ipv4 object at 0x107a5d810>
+    tcp <ryu.lib.packet.tcp.tcp object at 0x107a5d850>
 
 
 
@@ -80,12 +85,18 @@ serialize method. You have the raw data to send. The following example
 is building an arp packet.
 
 .. code-block:: python
-    
-    dst = 'a' * 6
-    src = 'b' * 6
-    e = ethernet.ethernet(dst, src, ether.ETH_TYPE_8021Q)
-    a = arp.arp(1, 0x0800, 6, 4, 2, '\a' * 6, 50, '\b' * 6, 30)
+
+    from ryu.ofproto import ether
+    from ryu.lib.packet import ethernet, arp, packet
+
+    e = ethernet.ethernet(dst='ff:ff:ff:ff:ff:ff',
+                          src='08:60:6e:7f:74:e7',
+                          ethertype=ether.ETH_TYPE_ARP)
+    a = arp.arp(hwtype=1, proto=0x0800, hlen=6, plen=4, opcode=2,
+                src_mac='08:60:6e:7f:74:e7', src_ip='192.0.2.1',
+                dst_mac='00:00:00:00:00:00', dst_ip='192.0.2.2')
     p = packet.Packet()
     p.add_protocol(e)
     p.add_protocol(a)
     p.serialize()
+    print repr(p.data)  # the on-wire packet

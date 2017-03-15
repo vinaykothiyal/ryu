@@ -1,4 +1,4 @@
-# Copyright (C) 2011, 2012 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2011-2014 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011, 2012 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,37 +14,87 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import copy
 import inspect
 import logging
-
-from ryu.controller import dispatcher
-from ryu.controller import ofp_event
+import sys
 
 LOG = logging.getLogger('ryu.controller.handler')
 
-QUEUE_NAME_OFP_MSG = 'ofp_msg'
-DISPATCHER_NAME_OFP_HANDSHAKE = 'ofp_handshake'
-HANDSHAKE_DISPATCHER = dispatcher.EventDispatcher(
-    DISPATCHER_NAME_OFP_HANDSHAKE)
-DISPATCHER_NAME_OFP_CONFIG = 'ofp_config'
-CONFIG_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_CONFIG)
-DISPATCHER_NAME_OFP_MAIN = 'ofp_main'
-MAIN_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_MAIN)
-DISPATCHER_NAME_OFP_DEAD = 'ofp_dead'
-DEAD_DISPATCHER = dispatcher.EventDispatcher(DISPATCHER_NAME_OFP_DEAD)
+# just represent OF datapath state. datapath specific so should be moved.
+HANDSHAKE_DISPATCHER = "handshake"
+CONFIG_DISPATCHER = "config"
+MAIN_DISPATCHER = "main"
+DEAD_DISPATCHER = "dead"
 
 
-def set_ev_cls(ev_cls, dispatchers):
+class _Caller(object):
+    """Describe how to handle an event class.
+    """
+
+    def __init__(self, dispatchers, ev_source):
+        """Initialize _Caller.
+
+        :param dispatchers: A list of states or a state, in which this
+                            is in effect.
+                            None and [] mean all states.
+        :param ev_source: The module which generates the event.
+                          ev_cls.__module__ for set_ev_cls.
+                          None for set_ev_handler.
+        """
+        self.dispatchers = dispatchers
+        self.ev_source = ev_source
+
+
+# should be named something like 'observe_event'
+def set_ev_cls(ev_cls, dispatchers=None):
+    """
+    A decorator for Ryu application to declare an event handler.
+
+    Decorated method will become an event handler.
+    ev_cls is an event class whose instances this RyuApp wants to receive.
+    dispatchers argument specifies one of the following negotiation phases
+    (or a list of them) for which events should be generated for this handler.
+    Note that, in case an event changes the phase, the phase before the change
+    is used to check the interest.
+
+    .. tabularcolumns:: |l|L|
+
+    =========================================== ===============================
+    Negotiation phase                           Description
+    =========================================== ===============================
+    ryu.controller.handler.HANDSHAKE_DISPATCHER Sending and waiting for hello
+                                                message
+    ryu.controller.handler.CONFIG_DISPATCHER    Version negotiated and sent
+                                                features-request message
+    ryu.controller.handler.MAIN_DISPATCHER      Switch-features message
+                                                received and sent set-config
+                                                message
+    ryu.controller.handler.DEAD_DISPATCHER      Disconnect from the peer.  Or
+                                                disconnecting due to some
+                                                unrecoverable errors.
+    =========================================== ===============================
+    """
     def _set_ev_cls_dec(handler):
-        handler.ev_cls = ev_cls
-        handler.dispatchers = dispatchers
+        if 'callers' not in dir(handler):
+            handler.callers = {}
+        for e in _listify(ev_cls):
+            handler.callers[e] = _Caller(_listify(dispatchers), e.__module__)
         return handler
     return _set_ev_cls_dec
 
 
-def _is_ev_handler(meth):
-    return 'ev_cls' in meth.__dict__
+def set_ev_handler(ev_cls, dispatchers=None):
+    def _set_ev_cls_dec(handler):
+        if 'callers' not in dir(handler):
+            handler.callers = {}
+        for e in _listify(ev_cls):
+            handler.callers[e] = _Caller(_listify(dispatchers), None)
+        return handler
+    return _set_ev_cls_dec
+
+
+def _has_caller(meth):
+    return hasattr(meth, 'callers')
 
 
 def _listify(may_list):
@@ -58,12 +108,47 @@ def _listify(may_list):
 def register_instance(i):
     for _k, m in inspect.getmembers(i, inspect.ismethod):
         # LOG.debug('instance %s k %s m %s', i, _k, m)
-        if not _is_ev_handler(m):
-            continue
+        if _has_caller(m):
+            for ev_cls, c in m.callers.items():
+                i.register_handler(ev_cls, m)
 
-        _dispatchers = _listify(getattr(m, 'dispatchers', None))
-        # LOG.debug("_dispatchers %s", _dispatchers)
-        for d in _dispatchers:
-            # LOG.debug('register dispatcher %s ev %s k %s m %s',
-            #           d.name, m.ev_cls, _k, m)
-            d.register_handler(m.ev_cls, m)
+
+def _is_method(f):
+    return inspect.isfunction(f) or inspect.ismethod(f)
+
+
+def get_dependent_services(cls):
+    services = []
+    for _k, m in inspect.getmembers(cls, _is_method):
+        if _has_caller(m):
+            for ev_cls, c in m.callers.items():
+                service = getattr(sys.modules[ev_cls.__module__],
+                                  '_SERVICE_NAME', None)
+                if service:
+                    # avoid cls that registers the own events (like
+                    # ofp_handler)
+                    if cls.__module__ != service:
+                        services.append(service)
+
+    m = sys.modules[cls.__module__]
+    services.extend(getattr(m, '_REQUIRED_APP', []))
+    services = list(set(services))
+    return services
+
+
+def register_service(service):
+    """
+    Register the ryu application specified by 'service' as
+    a provider of events defined in the calling module.
+
+    If an application being loaded consumes events (in the sense of
+    set_ev_cls) provided by the 'service' application, the latter
+    application will be automatically loaded.
+
+    This mechanism is used to e.g. automatically start ofp_handler if
+    there are applications consuming OFP events.
+    """
+    frame = inspect.currentframe()
+    m_name = frame.f_back.f_globals['__name__']
+    m = sys.modules[m_name]
+    m._SERVICE_NAME = service

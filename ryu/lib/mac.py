@@ -14,38 +14,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import itertools
+import six
 
+from ryu.lib import addrconv
 
-# Internal representation of mac address is string[6]
-_HADDR_LEN = 6
+if six.PY3:
+    _ord = int
+else:
+    _ord = ord
 
-DONTCARE = '\x00' * 6
-BROADCAST = '\xff' * 6
-MULTICAST = '\xfe' + '\xff' * 5
-UNICAST = '\x01' + '\x00' * 5
+# string representation
+HADDR_PATTERN = r'([0-9a-f]{2}:){5}[0-9a-f]{2}'
+
+DONTCARE = b'\x00' * 6
+BROADCAST = b'\xff' * 6
+DONTCARE_STR = '00:00:00:00:00:00'
+BROADCAST_STR = 'ff:ff:ff:ff:ff:ff'
+MULTICAST = 'fe:ff:ff:ff:ff:ff'
+UNICAST = '01:00:00:00:00:00'
 
 
 def is_multicast(addr):
-    return bool(ord(addr[0]) & 0x01)
+    return bool(_ord(addr[0]) & 0x01)
 
 
 def haddr_to_str(addr):
     """Format mac address in internal representation into human readable
     form"""
-    assert len(addr) == _HADDR_LEN
-    return ':'.join('%02x' % ord(char) for char in addr)
+    if addr is None:
+        return 'None'
+    try:
+        return addrconv.mac.bin_to_text(addr)
+    except:
+        raise AssertionError
+
+
+def haddr_to_int(addr):
+    """Convert mac address string in human readable format into
+    integer value"""
+    try:
+        return int(addr.replace(':', ''), 16)
+    except:
+        raise ValueError
 
 
 def haddr_to_bin(string):
     """Parse mac address string in human readable format into
     internal representation"""
-    hexes = string.split(':')
-    if len(hexes) != _HADDR_LEN:
-        ValueError('Invalid format for mac address: %s' % string)
-    return ''.join(chr(int(h, 16)) for h in hexes)
+    try:
+        return addrconv.mac.text_to_bin(string)
+    except:
+        raise ValueError
 
 
 def haddr_bitand(addr, mask):
-    return ''.join(chr(ord(a) & ord(m)) for (a, m)
-                   in itertools.izip(addr, mask))
+    return b''.join(six.int2byte(_ord(a) & _ord(m)) for (a, m)
+                    in zip(addr, mask))

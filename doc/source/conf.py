@@ -12,12 +12,14 @@
 # serve to show the default.
 
 import sys, os
-from ryu import version as ryu_version
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
-#sys.path.insert(0, os.path.abspath('.'))
+sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath('.'))
+
+from ryu import version as ryu_version
 
 # -- General configuration -----------------------------------------------------
 
@@ -26,7 +28,7 @@ from ryu import version as ryu_version
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = []
+extensions = [ 'sphinx.ext.autodoc' ]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -42,7 +44,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Ryu'
-copyright = u'2011, 2012 Nippon Telegraph and Telephone Corporation'
+copyright = u'2011-2014 Nippon Telegraph and Telephone Corporation'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -92,7 +94,7 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
-html_theme = 'haiku'
+html_theme = 'sphinx_rtd_theme'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -130,6 +132,7 @@ html_static_path = ['_static']
 # If true, SmartyPants will be used to convert quotes and dashes to
 # typographically correct entities.
 #html_use_smartypants = True
+html_use_smartypants = False
 
 # Custom sidebar templates, maps document names to template names.
 #html_sidebars = {}
@@ -213,5 +216,9 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     ('index', 'ryu', u'ryu Documentation',
-     [u'ryu development team'], 1)
+     [u'Ryu development team'], 8),
+    ('man/ryu', 'ryu', u'management for Ryu application',
+     [u'Ryu development team'], 8),
+    ('man/ryu_manager', 'ryu-manager', 'management for Ryu application',
+     [u'Ryu development team'], 8),
 ]

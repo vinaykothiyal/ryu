@@ -1,4 +1,4 @@
-# Copyright (C) 2011 Nippon Telegraph and Telephone Corporation.
+# Copyright (C) 2012 Nippon Telegraph and Telephone Corporation.
 # Copyright (C) 2011 Isaku Yamahata <yamahata at valinux co jp>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,13 +14,38 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+OpenFlow event definitions.
+"""
+
 import inspect
 
+from ryu.controller import handler
+from ryu import ofproto
 from ryu import utils
 from . import event
 
 
 class EventOFPMsgBase(event.EventBase):
+    """
+    The base class of OpenFlow event class.
+
+    OpenFlow event classes have at least the following attributes.
+
+    .. tabularcolumns:: |l|L|
+
+    ============ ==============================================================
+    Attribute    Description
+    ============ ==============================================================
+    msg          An object which describes the corresponding OpenFlow message.
+    msg.datapath A ryu.controller.controller.Datapath instance
+                 which describes an OpenFlow switch from which we received
+                 this OpenFlow message.
+    ============ ==============================================================
+
+    The msg object has some more additional members whose values are extracted
+    from the original OpenFlow message.
+    """
     def __init__(self, msg):
         super(EventOFPMsgBase, self).__init__()
         self.msg = msg
@@ -38,8 +63,12 @@ def _ofp_msg_name_to_ev_name(msg_name):
 
 
 def ofp_msg_to_ev(msg):
-    name = _ofp_msg_name_to_ev_name(msg.__class__.__name__)
-    return _OFP_MSG_EVENTS[name](msg)
+    return ofp_msg_to_ev_cls(msg.__class__)(msg)
+
+
+def ofp_msg_to_ev_cls(msg_cls):
+    name = _ofp_msg_name_to_ev_name(msg_cls.__name__)
+    return _OFP_MSG_EVENTS[name]
 
 
 def _create_ofp_msg_ev_class(msg_cls):
@@ -56,21 +85,60 @@ def _create_ofp_msg_ev_class(msg_cls):
     _OFP_MSG_EVENTS[name] = cls
 
 
-def _create_ofp_msg_ev_from_module(modname):
-    mod = utils.import_module(modname)
+def _create_ofp_msg_ev_from_module(ofp_parser):
     # print mod
-    for _k, cls in mod.__dict__.items():
-        if not inspect.isclass(cls):
-            continue
-        if 'cls_msg_type' not in cls.__dict__:
+    for _k, cls in inspect.getmembers(ofp_parser, inspect.isclass):
+        if not hasattr(cls, 'cls_msg_type'):
             continue
         _create_ofp_msg_ev_class(cls)
 
 
-# TODO:XXX
-_PARSER_MODULE_LIST = ['ryu.ofproto.ofproto_v1_0_parser',
-                       'ryu.ofproto.ofproto_v1_2_parser']
+for ofp_mods in ofproto.get_ofp_modules().values():
+    ofp_parser = ofp_mods[1]
+    # print 'loading module %s' % ofp_parser
+    _create_ofp_msg_ev_from_module(ofp_parser)
 
-for m in _PARSER_MODULE_LIST:
-    # print 'loading module %s' % m
-    _create_ofp_msg_ev_from_module(m)
+
+class EventOFPStateChange(event.EventBase):
+    """
+    An event class for negotiation phase change notification.
+
+    An instance of this class is sent to observer after changing
+    the negotiation phase.
+    An instance has at least the following attributes.
+
+    ========= =================================================================
+    Attribute Description
+    ========= =================================================================
+    datapath  ryu.controller.controller.Datapath instance of the switch
+    ========= =================================================================
+    """
+    def __init__(self, dp):
+        super(EventOFPStateChange, self).__init__()
+        self.datapath = dp
+
+
+class EventOFPPortStateChange(event.EventBase):
+    """
+    An event class to notify the port state changes of Dtatapath instance.
+
+    This event performs like EventOFPPortStatus, but Ryu will
+    send this event after updating ``ports`` dict of Datapath instances.
+    An instance has at least the following attributes.
+
+    ========= =================================================================
+    Attribute Description
+    ========= =================================================================
+    datapath  ryu.controller.controller.Datapath instance of the switch
+    reason    one of OFPPR_*
+    port_no   Port number which state was changed
+    ========= =================================================================
+    """
+    def __init__(self, dp, reason, port_no):
+        super(EventOFPPortStateChange, self).__init__()
+        self.datapath = dp
+        self.reason = reason
+        self.port_no = port_no
+
+
+handler.register_service('ryu.controller.ofp_handler')

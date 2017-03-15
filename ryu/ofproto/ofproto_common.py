@@ -21,5 +21,16 @@ OFP_HEADER_PACK_STR = '!BBHI'
 OFP_HEADER_SIZE = 8
 assert calcsize(OFP_HEADER_PACK_STR) == OFP_HEADER_SIZE
 
-OFP_TCP_PORT = 6633
-OFP_SSL_PORT = 6633
+# Note: IANA assigned port number for OpenFlow is 6653
+# from OpenFlow 1.3.3 (EXT-133).
+# Some applications may still use 6633 as the de facto standard though.
+OFP_TCP_PORT = 6653
+OFP_SSL_PORT = 6653
+OFP_TCP_PORT_OLD = 6633
+OFP_SSL_PORT_OLD = 6633
+
+# Vendor/Experimenter IDs
+# https://rs.opennetworking.org/wiki/display/PUBLIC/ONF+Registry
+NX_EXPERIMENTER_ID = 0x00002320  # Nicira
+BSN_EXPERIMENTER_ID = 0x005c16c7  # Big Switch Networks
+ONF_EXPERIMENTER_ID = 0x4f4e4600  # OpenFlow Extensions for 1.3.X Pack 1
